@@ -47,12 +47,20 @@ function New-DotfileLink {
 # --- 設定データ ---
 
 $apps = @(
-    @{ Name = "WezTerm";  Id = "wez.wezterm"      }
-    @{ Name = "Starship"; Id = "Starship.Starship"}
+    # Neovim
+    @{ Name = "Neovim";          Id = "Neovim.Neovim"              }
+    @{ Name = "tree-sitter-cli"; Id = "tree-sitter.tree-sitter-cli"}
+    @{ Name = "7-Zip";           Id = "7zip.7zip"                  }
+    @{ Name = "ripgrep";         Id = "BurntSushi.ripgrep.MSVC"}
+    # Terminal
+    @{ Name = "Starship";        Id = "Starship.Starship"          }
+    @{ Name = "WezTerm";         Id = "wez.wezterm"                }
+    @{ Name = "WTQ";             Id = "windows-terminal-quake"     }
 )
 
 $links = @{
     ".config\starship.toml"        = "$env:USERPROFILE\.config\starship.toml"
+    "wtq\wtq.jsonc"                = "$env:APPDATA\wtq\wtq.jsonc"
     ".config\wezterm\wezterm.lua"  = "$env:USERPROFILE\.config\wezterm\wezterm.lua"
     ".config\wezterm\keybinds.lua" = "$env:USERPROFILE\.config\wezterm\keybinds.lua"
 }
@@ -76,6 +84,17 @@ if ($Link) {
         $src = Join-Path $PSScriptRoot $item.Key
         $dest = $item.Value
         New-DotfileLink -SourcePath $src -TargetPath $dest
+    }
+
+    # $PROFILE
+    $profileSrcName = "Microsoft.PowerShell_profile.ps1"
+    $profileSrcPath = Join-Path $PSScriptRoot $profileSrcName
+
+    if (Test-Path $profileSrcPath) {
+        Write-Host "Processing PowerShell Profile..." -ForegroundColor Yellow
+        New-DotfileLink -SourcePath $profileSrcPath -TargetPath $PROFILE
+    } else {
+        Write-Host "Skip: $profileSrcName not found in dotfiles." -ForegroundColor Gray
     }
 }
 

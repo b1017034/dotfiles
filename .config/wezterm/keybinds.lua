@@ -73,7 +73,7 @@ return {
 
     -- コピペ
     { key = "c", mods = "SUPER", action = act.CopyTo("Clipboard") },
-    { key = "v", mods = "SUPER", action = act.PasteFrom("Clipboard") },
+    { key = "v", mods = "SUPER", action = act.PasteFrom("Clipboard") },   
   },
 
   key_tables = {
