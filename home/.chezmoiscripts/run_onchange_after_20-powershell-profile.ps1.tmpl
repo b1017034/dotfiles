@@ -1,9 +1,6 @@
 {{ if eq .chezmoi.os "windows" -}}
-# $PROFILE に「本体を読み込む 1 行」だけを書き込む。
-#
-# profile の実体は chezmoi が管理する ~/.config/powershell/profile.ps1 に置く。
-# $PROFILE の場所は PowerShell 自身が解決するので、OneDrive による Documents の
-# リダイレクトやホスト (pwsh / Windows PowerShell / VSCode) の違いに追従できる。
+# $PROFILE には本体 (~/.config/powershell/profile.ps1) を読み込む 1 行だけを書く。
+# $PROFILE の場所は PowerShell 自身が解決するので、OneDrive リダイレクトやホストの違いに追従できる。
 $ErrorActionPreference = 'Stop'
 
 $line = '. "$HOME\.config\powershell\profile.ps1"'

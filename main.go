@@ -6,10 +6,6 @@
 //	dotfiles uninstall <id|#|all>.. パッケージを削除
 //	dotfiles apply [path...]        chezmoi apply
 //	dotfiles diff  [path...]        chezmoi diff
-//
-// 設定ファイルの配置は chezmoi が行う。パッケージの定義は chezmoi の
-// テンプレートデータ home/.chezmoidata/packages.toml に置き、
-// .chezmoiscripts の導入スクリプトと本ツールが同じ定義を読む。
 package main
 
 import (
@@ -177,7 +173,6 @@ func resolve(pkgs []packages.Package, args []string) ([]packages.Package, error)
 func doPackages(pm packages.Manager, cmd string, targets []packages.Package, rep run.Reporter) error {
 	var firstErr error
 	for _, p := range targets {
-		// script で入れるものはパッケージマネージャを経由しない
 		if !p.ViaScript() && !pm.Available() {
 			return fmt.Errorf("%s が見つかりません", pm.Name())
 		}
@@ -238,7 +233,6 @@ func printStatus(cz *chezmoi.Client, pm packages.Manager, pkgs []packages.Packag
 		state := "not installed"
 		switch {
 		case !p.Supported():
-			// この OS では導入できない。存在だけ見えるようにしておく
 			state = "— " + p.HostsLabel() + " のみ"
 		case packages.Installed(pm, p):
 			state = "installed"
@@ -262,7 +256,6 @@ func printStatus(cz *chezmoi.Client, pm packages.Manager, pkgs []packages.Packag
 	return nil
 }
 
-// pad は表示幅を考慮して右埋めする。全角を含む文字列でも桁が揃う。
 func pad(s string, w int) string {
 	if d := w - lipgloss.Width(s); d > 0 {
 		return s + strings.Repeat(" ", d)
@@ -280,7 +273,6 @@ func confirm(prompt string) bool {
 	return a == "y" || a == "Y"
 }
 
-// colorize は CLI 出力に ANSI 色を付ける。
 func colorize(e run.Event) string {
 	const reset = "\033[0m"
 	var code string

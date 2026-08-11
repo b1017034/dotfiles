@@ -1,4 +1,4 @@
-// Package run は外部コマンドの実行と、その出力を 1 行ずつ受け取るための仕組みを提供する。
+// Package run は外部コマンドの実行と行単位のログ配信。
 package run
 
 import (
@@ -9,7 +9,6 @@ import (
 	"strings"
 )
 
-// Level はログの種別。
 type Level int
 
 const (
@@ -20,7 +19,6 @@ const (
 	LevelSkip
 )
 
-// Event は実行中に流れる 1 行分のログ。
 type Event struct {
 	Level Level
 	Text  string
@@ -42,7 +40,6 @@ func (r Reporter) Warn(f string, a ...any) { r.emit(LevelWarn, f, a...) }
 func (r Reporter) Err(f string, a ...any)  { r.emit(LevelErr, f, a...) }
 func (r Reporter) Skip(f string, a ...any) { r.emit(LevelSkip, f, a...) }
 
-// Command は外部コマンドを組み立てる。呼び出し箇所を 1 つにまとめておく。
 func Command(name string, args ...string) *exec.Cmd {
 	return exec.Command(name, args...)
 }
@@ -53,13 +50,11 @@ func Look(name string) bool {
 	return err == nil
 }
 
-// Output はコマンドを実行して標準出力を返す。
 func Output(name string, args ...string) (string, error) {
 	out, err := Command(name, args...).Output()
 	return string(out), err
 }
 
-// Stream はコマンドを実行し、出力を 1 行ずつ Reporter に流す。
 func Stream(rep Reporter, name string, args ...string) error {
 	cmd := Command(name, args...)
 

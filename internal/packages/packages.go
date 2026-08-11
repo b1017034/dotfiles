@@ -1,8 +1,5 @@
-// Package packages は .chezmoidata/packages.toml の読み込みと、
-// パッケージマネージャ (brew / winget) の操作を担当する。
-//
-// packages.toml は chezmoi のテンプレートデータでもあり、
-// .chezmoiscripts の導入スクリプトと本パッケージが同じ定義を読む。
+// Package packages は .chezmoidata/packages.toml の読み込みと
+// パッケージマネージャ (brew / winget) の操作。
 package packages
 
 import (
@@ -16,39 +13,28 @@ import (
 	"github.com/b1017034/dotfiles/internal/run"
 )
 
-// Name は packages.toml の相対パス (chezmoi の source dir から見た位置)。
+// Name は chezmoi の source dir から見た packages.toml の相対パス。
 const Name = ".chezmoidata/packages.toml"
 
-// Package は管理対象のパッケージ 1 件。
-// 定義は OS 非依存で、実行中の OS 向けの情報が ID / Script に解決される。
+// Package は管理対象のパッケージ 1 件。実行中の OS 向けの情報が ID / Script に解決される。
 type Package struct {
-	// Name は表示名。OS に依らない。
 	Name string
-	// Desc は一覧に出す説明。
 	Desc string
 
-	// ID は実行中の OS のパッケージマネージャに渡す識別子。
-	// brew なら formula 名、winget なら package ID。
-	// この OS のパッケージマネージャで扱えないなら空。
+	// この OS のパッケージマネージャに渡す識別子。扱えないなら空
 	ID string
 
-	// Script はパッケージマネージャに無いものを導入するコマンド。
-	// Check は導入済み判定に使うコマンド名。ID が空のときだけ使う。
+	// パッケージマネージャに無いものの導入コマンドと導入済み判定コマンド。ID が空のときだけ使う
 	Script string
 	Check  string
 
-	// Hosts は導入できる OS のラベル一覧 (表示用)。例: ["macOS", "Windows"]。
+	// 導入できる OS のラベル一覧 (表示用)
 	Hosts []string
 }
 
-// Supported はこの OS で導入できるかを返す。
 func (p Package) Supported() bool { return p.ID != "" || p.Script != "" }
-
-// ViaScript はパッケージマネージャではなく script で導入するかを返す。
-// この経路で入れたものはパッケージマネージャの管理外なので削除できない。
 func (p Package) ViaScript() bool { return p.ID == "" && p.Script != "" }
 
-// HostsLabel は導入できる OS を "macOS / Windows" のように返す。
 func (p Package) HostsLabel() string {
 	switch len(p.Hosts) {
 	case 0:
@@ -60,7 +46,6 @@ func (p Package) HostsLabel() string {
 	}
 }
 
-// osEntry はパッケージマネージャに無いものの逃げ道。
 type osEntry struct {
 	Script string `toml:"script"`
 	Check  string `toml:"check"`
@@ -79,10 +64,7 @@ type file struct {
 	Packages []entry `toml:"packages"`
 }
 
-// Load は source dir 配下の packages.toml を読む。
-//
-// 他 OS 専用のものも含めて全件返す。Supported が false のものは
-// 一覧には出すが操作させない、という扱いを呼び出し側で行う。
+// Load は source dir 配下の packages.toml を読む。他 OS 専用のものも含めて全件返す。
 func Load(sourceDir string) ([]Package, error) {
 	path := filepath.Join(sourceDir, filepath.FromSlash(Name))
 
@@ -133,10 +115,6 @@ func Load(sourceDir string) ([]Package, error) {
 	return out, nil
 }
 
-// ---------------------------------------------------------------- 操作
-
-// Installed はパッケージが導入済みかを返す。
-// script で入れるものは check コマンドが PATH にあるかで判定する。
 func Installed(pm Manager, p Package) bool {
 	if p.ViaScript() {
 		return run.Look(p.Check)
@@ -147,14 +125,12 @@ func Installed(pm Manager, p Package) bool {
 	return pm.IsInstalled(p.ID)
 }
 
-// Forget は Installed のキャッシュを捨てる。
 func Forget(pm Manager, p Package) {
 	if p.ID != "" {
 		pm.Forget(p.ID)
 	}
 }
 
-// Install はパッケージを導入する。
 func Install(pm Manager, p Package, rep run.Reporter) error {
 	if p.ViaScript() {
 		rep.Info("[%s] script: %s", p.Name, p.Script)
@@ -164,8 +140,6 @@ func Install(pm Manager, p Package, rep run.Reporter) error {
 	return pm.Install(p.ID, rep)
 }
 
-// Uninstall はパッケージを削除する。
-// script で入れたものはパッケージマネージャの管理外なので削除できない。
 func Uninstall(pm Manager, p Package, rep run.Reporter) error {
 	if p.ViaScript() {
 		return fmt.Errorf("%s は script で導入したものなので削除できません", p.Name)
@@ -174,7 +148,6 @@ func Uninstall(pm Manager, p Package, rep run.Reporter) error {
 	return pm.Uninstall(p.ID, rep)
 }
 
-// runScript は script をその OS のシェルで実行する。
 func runScript(script string, rep run.Reporter) error {
 	if runtime.GOOS == "windows" {
 		return run.Stream(rep, "pwsh", "-NoLogo", "-NoProfile", "-Command", script)
@@ -182,7 +155,6 @@ func runScript(script string, rep run.Reporter) error {
 	return run.Stream(rep, "sh", "-c", script)
 }
 
-// HostLabel は画面表示用の OS 名を返す。
 func HostLabel() string {
 	switch runtime.GOOS {
 	case "darwin":

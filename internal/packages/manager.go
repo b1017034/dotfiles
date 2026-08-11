@@ -10,30 +10,25 @@ import (
 
 // Manager は OS ごとのパッケージマネージャを抽象化する。
 type Manager interface {
-	// Name はコマンド名 (brew / winget)。
 	Name() string
-	// Available はコマンドが PATH にあるか。
 	Available() bool
-	// IsInstalled は導入済みかを返す。結果はキャッシュされる。
+	// 結果はキャッシュされる
 	IsInstalled(id string) bool
-	// Refresh はキャッシュを捨てて再取得する。
+	// キャッシュを捨てて再取得する
 	Refresh()
-	// Forget は 1 件だけキャッシュを捨てる。
+	// 1 件だけキャッシュを捨てる
 	Forget(id string)
 
 	Install(id string, rep run.Reporter) error
 	Uninstall(id string, rep run.Reporter) error
 }
 
-// NewManager は実行中の OS に合った Manager を返す。
 func NewManager() Manager {
 	if runtime.GOOS == "windows" {
 		return &winget{cache: map[string]bool{}}
 	}
 	return &brew{}
 }
-
-// ---------------------------------------------------------------- homebrew
 
 type brew struct {
 	mu     sync.Mutex
@@ -66,7 +61,6 @@ func (b *brew) load() {
 	if !run.Look("brew") {
 		return
 	}
-	// formula と cask をまとめて取得する
 	for _, kind := range []string{"--formula", "--cask"} {
 		out, err := run.Output("brew", "list", kind, "-1")
 		if err != nil {
@@ -96,8 +90,6 @@ func (b *brew) Uninstall(id string, rep run.Reporter) error {
 	return run.Stream(rep, "brew", "uninstall", id)
 }
 
-// ---------------------------------------------------------------- winget
-
 type winget struct {
 	mu    sync.Mutex
 	cache map[string]bool
@@ -118,8 +110,7 @@ func (w *winget) Forget(id string) {
 	w.mu.Unlock()
 }
 
-// IsInstalled は winget list を 1 件ずつ叩く。件数分プロセスを起動するため
-// 呼び出し元 (TUI) は非同期で実行し、結果をキャッシュする。
+// winget list を 1 件ずつ叩くので遅い。呼び出し元は非同期で実行する。
 func (w *winget) IsInstalled(id string) bool {
 	if id == "" {
 		return false
@@ -136,7 +127,7 @@ func (w *winget) IsInstalled(id string) bool {
 	if run.Look("winget") {
 		out, err := run.Command("winget", "list", "--id", id, "--exact",
 			"--disable-interactivity", "--accept-source-agreements").CombinedOutput()
-		// 未導入のときは非 0 で終了する。念のため出力にも ID があるか確認する。
+		// 未導入のときは非 0 で終了する
 		installed = err == nil && strings.Contains(string(out), id)
 	}
 
