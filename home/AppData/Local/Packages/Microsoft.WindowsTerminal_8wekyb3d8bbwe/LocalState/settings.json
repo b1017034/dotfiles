@@ -1,0 +1,153 @@
+{
+    "$help": "https://aka.ms/terminal-documentation",
+    "$schema": "https://aka.ms/terminal-profiles-schema",
+    "actions": 
+    [
+        {
+            "command": 
+            {
+                "action": "globalSummon",
+                "monitor": "any",
+                "name": "_quake"
+            },
+            "id": "User.MyGlobalSummonQuake"
+        },
+        {
+            "command": 
+            {
+                "action": "quakeMode"
+            },
+            "id": "User.quakeMode.F1E129A4"
+        },
+        {
+            "command": 
+            {
+                "action": "sendInput",
+                "input": "\u001b\r"
+            },
+            "id": "User.sendInput.8F63D3A9"
+        }
+    ],
+    "compatibility.allowHeadless": true,
+    "copyFormatting": "none",
+    "startOnUserLogin": true,
+    "copyOnSelect": false,
+    "defaultProfile": "{4ff56d04-d9cf-57ea-bae2-ad396374e7e3}",
+    "keybindings":
+    [
+        {
+            "id": "User.MyGlobalSummonQuake",
+            "keys": "ctrl+i"
+        },
+        {
+            "id": "User.sendInput.8F63D3A9",
+            "keys": "shift+enter"
+        },
+        {
+            "id": "Terminal.DuplicatePaneAuto",
+            "keys": "alt+shift+d"
+        },
+        {
+            "id": "Terminal.CopyToClipboard",
+            "keys": "ctrl+c"
+        },
+        {
+            "id": "Terminal.FindText",
+            "keys": "ctrl+shift+f"
+        },
+        {
+            "id": "Terminal.PasteFromClipboard",
+            "keys": "ctrl+v"
+        },
+        {
+            "id": null,
+            "keys": "win+sc(41)"
+        }
+    ],
+    "newTabMenu": 
+    [
+        {
+            "type": "remainingProfiles"
+        }
+    ],
+    "profiles": 
+    {
+        "defaults": 
+        {
+            "colorScheme": "Dark+",
+            "font": 
+            {
+                "builtinGlyphs": true,
+                "face": "MesloLGM Nerd Font",
+                "size": 10,
+                "weight": "semi-light"
+            },
+            "intenseTextStyle": "bright",
+            "opacity": 60,
+            "useAcrylic": true
+        },
+        "list": 
+        [
+            {
+                "experimental.repositionCursorWithMouse": false,
+                "guid": "{4ff56d04-d9cf-57ea-bae2-ad396374e7e3}",
+                "hidden": false,
+                "name": "Ubuntu 22.04.5 LTS",
+                "source": "CanonicalGroupLimited.Ubuntu22.04LTS_79rhkp1fndgsc"
+            },
+            {
+                "commandline": "C:\\msys64\\msys2_shell.cmd -defterm -here -no-start -msys2 -use-full-path -shell zsh",
+                "guid": "{3aa577b6-1eb5-456b-a1c1-3b6dd1a99368}",
+                "hidden": false,
+                "icon": "C:\\msys64\\msys2.ico",
+                "name": "MSYS2",
+                "pathTranslationStyle": "msys2",
+                "startingDirectory": "%USERPROFILE%"
+            },
+            {
+                "experimental.rainbowSuggestions": false,
+                "experimental.repositionCursorWithMouse": false,
+                "guid": "{2ece5bfe-50ed-5f3a-ab87-5cd4baafed2b}",
+                "hidden": false,
+                "name": "Git Bash",
+                "opacity": 50,
+                "source": "Git"
+            },
+            {
+                "commandline": "%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+                "guid": "{61c54bbd-c2c6-5271-96e7-009a87ff44bf}",
+                "hidden": false,
+                "name": "Windows PowerShell"
+            },
+            {
+                "guid": "{0caa0dad-35be-5f56-a8ff-afceeeaa6101}",
+                "hidden": false,
+                "name": "Command Prompt"
+            },
+            {
+                "font": 
+                {
+                    "face": "MesloLGM Nerd Font"
+                },
+                "guid": "{574e775e-4f2a-5b96-ac1e-a2962a402336}",
+                "hidden": false,
+                "name": "PowerShell",
+                "source": "Windows.Terminal.PowershellCore"
+            },
+            {
+                "guid": "{46bbe523-abc6-5f48-9eee-75a09b5cfaae}",
+                "hidden": false,
+                "name": "Developer Command Prompt for VS 2022",
+                "source": "Windows.Terminal.VisualStudio"
+            },
+            {
+                "guid": "{76bdcd15-8b8a-53c6-a785-f248e57ac72c}",
+                "hidden": false,
+                "name": "Developer PowerShell for VS 2022",
+                "source": "Windows.Terminal.VisualStudio"
+            }
+        ]
+    },
+    "schemes": [],
+    "themes": []
+}
