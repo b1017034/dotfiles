@@ -4,10 +4,7 @@
 #   ./bootstrap.sh            設定を書いて差分を表示するだけ
 #   ./bootstrap.sh --apply    差分の適用まで行う
 #
-# chezmoi の source dir は既定で ~/.local/share/chezmoi だが、このリポジトリは
-# ghq の管理下に置きたいので sourceDir を設定ファイルに書いて上書きする。
-# リポジトリルートの .chezmoiroot が home/ を指すので、実際の source dir は
-# <repo>/home に解決される。
+
 set -eu
 
 apply=0
@@ -40,9 +37,12 @@ if [ -f "$config" ] && ! grep -qF "$repo" "$config"; then
 	exit 1
 fi
 
+# chezmoi の source dir は既定で ~/.local/share/chezmoi だが、このリポジトリは
+# ghq の管理下に置きたいので sourceDir を設定ファイルに書いて上書きする。
+# リポジトリルートの .chezmoiroot が home/ を指すので、実際の source dir は
+# <repo>/home に解決される。
 mkdir -p "$(dirname "$config")"
 cat >"$config" <<EOF
-# bootstrap.sh が生成。chezmoi 自身の管理対象ではない。
 sourceDir = "$repo"
 
 # .ps1 スクリプトには shebang が書けないのでインタプリタを明示する。

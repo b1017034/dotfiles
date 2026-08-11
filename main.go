@@ -150,9 +150,5 @@ func printUsage() {
   dotfiles status          chezmoi status
   dotfiles apply [path...] chezmoi apply (-y で確認省略)
   dotfiles diff  [path...] chezmoi diff
-
-パッケージは chezmoi apply 時に .chezmoiscripts が導入する。
-定義は home/.chezmoidata/packages.toml。
-設定ファイルの追加は chezmoi add <path> を使ってください。
 `)
 }
