@@ -1,11 +1,9 @@
-{{- /* OS ごとに配置しないものを除外する。パターンはターゲット (destDir) からの相対パス。 */ -}}
-{{ if ne .chezmoi.os "darwin" }}
-.config/herdr
-{{ end }}
 {{ if ne .chezmoi.os "windows" }}
 AppData
 .config/powershell
 {{ end }}
 {{ if eq .chezmoi.os "windows" }}
 .oh-my-zsh
+{{- /* Windows の herdr は %APPDATA%\herdr\config.toml を読むため .config 側は配置しない */}}
+.config/herdr
 {{ end }}
