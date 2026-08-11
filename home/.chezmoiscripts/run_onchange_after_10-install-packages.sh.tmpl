@@ -1,0 +1,39 @@
+{{ if eq .chezmoi.os "darwin" -}}
+#!/bin/sh
+# run_onchange_ なので、展開結果が変わったとき (= パッケージを増減したとき) だけ走る。
+set -eu
+
+want='{{ range .packages }}{{ if hasKey . "brew" }}{{ .brew }} {{ end }}{{ end }}'
+
+if [ -z "$want" ]; then
+	:
+elif ! command -v brew >/dev/null 2>&1; then
+	echo "brew が見つかりません。https://brew.sh/ を見てください" >&2
+else
+	installed="$(brew list --formula -1; brew list --cask -1)"
+
+	missing=''
+	# shellcheck disable=SC2086 # 単語分割してパッケージ名の並びとして扱う
+	for p in $want; do
+		if ! printf '%s\n' "$installed" | grep -qxF "$p"; then
+			missing="$missing $p"
+		fi
+	done
+
+	if [ -n "$missing" ]; then
+		echo "installing:$missing"
+		# shellcheck disable=SC2086 # 単語分割してパッケージ名の並びとして渡す
+		brew install $missing
+	else
+		echo "brew: すべて導入済みです"
+	fi
+fi
+{{ range .packages }}{{ if hasKey . "darwin" }}
+if command -v {{ .darwin.check | quote }} >/dev/null 2>&1; then
+	echo "skip: {{ .name }}"
+else
+	echo "installing: {{ .name }}"
+	{{ .darwin.script }}
+fi
+{{ end }}{{ end }}
+{{ end -}}

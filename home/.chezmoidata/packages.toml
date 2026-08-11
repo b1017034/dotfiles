@@ -1,0 +1,44 @@
+[[packages]]
+name = "chezmoi"
+description = "dotfiles manager"
+brew = "chezmoi"
+winget = "twpayne.chezmoi"
+
+[[packages]]
+name = "starship"
+description = "cross-shell prompt"
+brew = "starship"
+winget = "Starship.Starship"
+
+[[packages]]
+name = "neovim"
+description = "editor"
+brew = "neovim"
+winget = "Neovim.Neovim"
+
+[[packages]]
+name = "ripgrep"
+description = "fast grep"
+brew = "ripgrep"
+winget = "BurntSushi.ripgrep.MSVC"
+
+[[packages]]
+name = "tree-sitter"
+description = "parser generator CLI"
+brew = "tree-sitter"
+winget = "tree-sitter.tree-sitter-cli"
+
+[[packages]]
+name = "herdr"
+description = "terminal agent manager"
+brew = "herdr"
+
+# winget に無いため公式インストーラで入れる (https://herdr.dev/docs/install/)
+[packages.windows]
+script = "irm https://herdr.dev/install.ps1 | iex"
+check = "herdr"
+
+[[packages]]
+name = "7zip"
+description = "archiver"
+winget = "7zip.7zip"

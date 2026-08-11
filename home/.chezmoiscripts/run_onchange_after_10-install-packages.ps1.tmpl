@@ -1,0 +1,37 @@
+{{ if eq .chezmoi.os "windows" -}}
+# run_onchange_ なので、展開結果が変わったとき (= パッケージを増減したとき) だけ走る。
+$ErrorActionPreference = 'Stop'
+
+$ids = @(
+{{- range .packages }}
+{{- if hasKey . "winget" }}
+    '{{ .winget }}'
+{{- end }}
+{{- end }}
+)
+
+if ($ids.Count -gt 0) {
+    if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
+        Write-Warning 'winget が見つかりません。App Installer を入れてください'
+    } else {
+        foreach ($id in $ids) {
+            winget list --id $id --exact --disable-interactivity --accept-source-agreements 2>&1 | Out-Null
+            if ($LASTEXITCODE -eq 0) {
+                Write-Host "skip: $id"
+                continue
+            }
+            Write-Host "installing: $id"
+            winget install --id $id --exact --silent --disable-interactivity `
+                --accept-source-agreements --accept-package-agreements
+        }
+    }
+}
+{{ range .packages }}{{ if hasKey . "windows" }}
+if (Get-Command {{ .windows.check }} -ErrorAction SilentlyContinue) {
+    Write-Host 'skip: {{ .name }}'
+} else {
+    Write-Host 'installing: {{ .name }}'
+    {{ .windows.script }}
+}
+{{ end }}{{ end }}
+{{ end -}}

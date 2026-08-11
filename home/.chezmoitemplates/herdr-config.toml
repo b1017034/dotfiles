@@ -1,0 +1,18 @@
+onboarding = false
+[theme]
+name = "terminal"        # 端末エミュレータの配色をそのまま継承
+auto_switch = true       # 端末のライト・ダーク切替に追従
+dark_name = "catppuccin"
+light_name = "catppuccin-latte"
+
+[ui.toast]
+delivery = "system"      # エージェントの通知を OS のシステム通知で受け取る
+
+[keys]
+prefix = "ctrl+a"        # tmux で Ctrl+A
+
+[[keys.command]]
+key = "prefix+shift+l"
+type = "pane"            # "pane"（一時ペイン）/ "shell"（バックグラウンド）
+command = "lazygit"
+description = "run lazygit"
