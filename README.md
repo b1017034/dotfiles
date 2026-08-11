@@ -18,6 +18,9 @@ TUI は Go 製なのでクロスコンパイルして Windows 機にバイナリ
 │   │   ├── starship.toml               → ~/.config/starship.toml           (共通)
 │   │   ├── herdr/config.toml           → ~/.config/herdr/config.toml       (macOS)
 │   │   └── powershell/profile.ps1      → ~/.config/powershell/profile.ps1  (Windows)
+│   ├── dot_oh-my-zsh/custom/plugins/   → ~/.oh-my-zsh/custom/plugins/      (Windows 以外)
+│   │   ├── cd-dev/                     ghq + fzf でリポジトリへ移動する dev
+│   │   └── xcstrings-diff/             *.xcstrings を読める形で差分表示する xdiff
 │   └── AppData/Roaming/wtq/wtq.jsonc   → %APPDATA%\wtq\wtq.jsonc           (Windows)
 ├── main.go
 └── internal/
@@ -31,7 +34,8 @@ TUI は Go 製なのでクロスコンパイルして Windows 機にバイナリ
 chezmoi から見えない。`$HOME` に配置されるのは `home/` 配下だけ。
 
 OS の出し分けは `home/.chezmoiignore` のテンプレートで行う。
-macOS では `AppData` と `.config/powershell` が、Windows では `.config/herdr` が除外される。
+macOS では `AppData` と `.config/powershell` が、Windows では `.config/herdr` と
+`.oh-my-zsh` が除外される。
 
 ## セットアップ
 
@@ -233,6 +237,10 @@ brew = "herdr"
   リダイレクトやホスト (pwsh / Windows PowerShell / VSCode) の違いに追従できる
 - `.chezmoiscripts` の導入スクリプトは `run_onchange_` なので、
   `packages.toml` を増減したときだけ走る
+- oh-my-zsh のプラグインは `custom/plugins/` 配下だけを管理している。oh-my-zsh 本体は
+  管理対象外なので、**新しいマシンでは oh-my-zsh を先に入れてから `chezmoi apply` する**。
+  逆順だと `~/.oh-my-zsh` が空でない状態になり、oh-my-zsh のインストーラが失敗する。
+  プラグインを有効にする `plugins=(...)` は `~/.zshrc` 側にあり、こちらは未管理
 - `chezmoi` は「最後に書いた後にターゲットが変わっている」と上書き確認のプロンプトを出すが、
   `./dotfiles` は chezmoi に TTY を渡していないので答えられない。そのため
   `--no-tty` を付けた上で、確認は `./dotfiles` 側が `chezmoi status` の 1 文字目を見て出す

@@ -6,3 +6,6 @@
 AppData
 .config/powershell
 {{ end }}
+{{ if eq .chezmoi.os "windows" }}
+.oh-my-zsh
+{{ end }}
