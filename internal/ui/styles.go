@@ -46,6 +46,11 @@ var (
 	keyStyle  = lipgloss.NewStyle().Foreground(colAccent).Bold(true)
 	descStyle = lipgloss.NewStyle().Foreground(colSubtle)
 
+	diffAddStyle  = lipgloss.NewStyle().Foreground(colGreen)
+	diffDelStyle  = lipgloss.NewStyle().Foreground(colRed)
+	diffHunkStyle = lipgloss.NewStyle().Foreground(colPurple)
+	diffFileStyle = lipgloss.NewStyle().Foreground(colText).Bold(true)
+
 	tabStyle = lipgloss.NewStyle().
 			Foreground(colSubtle).
 			Border(lipgloss.NormalBorder(), false, false, true, false).

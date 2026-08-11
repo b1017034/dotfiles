@@ -1,7 +1,4 @@
 // Package ui は Bubble Tea による管理画面。
-//
-// 設定ファイルの状態は chezmoi に、パッケージの状態はパッケージマネージャに問い合わせる。
-// この画面自身は状態を持たず、両者のフロントエンドに徹する。
 package ui
 
 import (
@@ -67,8 +64,6 @@ func (a action) String() string {
 	return "?"
 }
 
-// ---------------------------------------------------------------- messages
-
 type pkgStatusMsg []bool
 type cfgStatusMsg struct {
 	entries []chezmoi.Entry
@@ -76,8 +71,6 @@ type cfgStatusMsg struct {
 }
 type logMsg run.Event
 type doneMsg struct{}
-
-// ---------------------------------------------------------------- model
 
 type model struct {
 	cz   *chezmoi.Client
@@ -97,8 +90,7 @@ type model struct {
 	mode    mode
 	prev    mode
 	pending action
-	// force は apply でターゲット側の変更を上書きしてよいか。
-	// ターゲットが直接編集されている場合だけ、確認を経て立つ。
+	// apply でターゲット側の変更を上書きしてよいか。確認を経て立つ。
 	force bool
 
 	spin    spinner.Model
@@ -106,12 +98,14 @@ type model struct {
 	eventCh chan run.Event
 	running bool
 	title   string
+	act action
+	// 実行結果の表示を末尾から何行さかのぼっているか
+	logScroll int
 
 	width  int
 	height int
 }
 
-// Run は管理画面を起動する。
 func Run(cz *chezmoi.Client, pm packages.Manager, pkgs []packages.Package) error {
 	s := spinner.New()
 	s.Spinner = spinner.Dot
@@ -159,8 +153,6 @@ func (m model) refreshCfgCmd() tea.Cmd {
 		return cfgStatusMsg{entries: entries, err: err}
 	}
 }
-
-// ---------------------------------------------------------------- update
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
@@ -225,9 +217,20 @@ func (m model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	case modeRunning:
 		if m.running {
-			return m, nil // 実行中は入力を受け付けない
+			return m, nil
 		}
-		m.mode = modeList
+		switch key {
+		case "up", "k":
+			if m.logScroll < len(m.logs)-m.logWindow() {
+				m.logScroll++
+			}
+		case "down", "j":
+			if m.logScroll > 0 {
+				m.logScroll--
+			}
+		default:
+			m.mode = modeList
+		}
 		return m, nil
 
 	case modeConfirm:
@@ -302,8 +305,7 @@ func (m model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 	case "A":
 		if m.tab == tabConfigs {
-			// ターゲットを直接いじった相手を黙って上書きしない。
-			// chezmoi 自身も確認を出すが、この画面では答えられないので先に聞く。
+			// chezmoi 自身も上書き確認を出すが、この画面では答えられないので先に聞く
 			if len(chezmoi.LocallyModified(m.entries, m.cfgPaths())) > 0 {
 				m.pending = actApply
 				m.force = true
@@ -338,7 +340,6 @@ func (m model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-// rows は現在のタブの行数。
 func (m model) rows() int {
 	if m.tab == tabConfigs {
 		return len(m.entries)
@@ -346,8 +347,6 @@ func (m model) rows() int {
 	return len(m.pkgs)
 }
 
-// selectable はその行を操作対象にできるかを返す。
-// Packages タブでは、この OS で導入できないものは選べない。
 func (m model) selectable(i int) bool {
 	if m.tab != tabPackages {
 		return true
@@ -355,7 +354,7 @@ func (m model) selectable(i int) bool {
 	return i < len(m.pkgs) && m.pkgs[i].Supported()
 }
 
-// targets は操作対象の index を返す。選択が無ければカーソル行。
+// 操作対象の index。選択が無ければカーソル行。
 func (m model) targets() []int {
 	var out []int
 	for i := 0; i < m.rows(); i++ {
@@ -369,7 +368,7 @@ func (m model) targets() []int {
 	return out
 }
 
-// cfgPaths は Configs タブの操作対象パスを返す。差分が無ければ nil (= 全体が対象)。
+// Configs タブの操作対象パス。差分が無ければ nil (= 全体が対象)。
 func (m model) cfgPaths() []string {
 	var out []string
 	for _, i := range m.targets() {
@@ -402,6 +401,8 @@ func (m model) start(act action) (tea.Model, tea.Cmd) {
 	m.running = true
 	m.logs = nil
 	m.title = act.String()
+	m.act = act
+	m.logScroll = 0
 
 	cz, pm, force := m.cz, m.pm, m.force
 
@@ -480,8 +481,6 @@ func waitEvent(ch chan run.Event) tea.Cmd {
 	}
 }
 
-// ---------------------------------------------------------------- view
-
 func (m model) View() string {
 	switch m.mode {
 	case modeRunning:
@@ -538,7 +537,6 @@ func (m model) header() string {
 }
 
 func (m model) tabs() string {
-	// この OS で導入できるものが全体より少なければ "6/8" のように出す
 	sup := 0
 	for _, p := range m.pkgs {
 		if p.Supported() {
@@ -561,8 +559,12 @@ func (m model) tabs() string {
 		counts[0] = "…"
 	}
 
-	var parts []string
+	// タブは下ボーダー付きの 2 行ブロックなので、文字列連結ではなく横に並べる
+	parts := []string{" "}
 	for t := tabPackages; t < numTabs; t++ {
+		if t > tabPackages {
+			parts = append(parts, " ")
+		}
 		label := fmt.Sprintf(" %d %s (%s) ", t+1, t, counts[t])
 		if t == m.tab {
 			parts = append(parts, tabActiveStyle.Render(label))
@@ -570,7 +572,7 @@ func (m model) tabs() string {
 			parts = append(parts, tabStyle.Render(label))
 		}
 	}
-	return " " + strings.Join(parts, " ")
+	return lipgloss.JoinHorizontal(lipgloss.Top, parts...)
 }
 
 func (m model) tablePackages() string {
@@ -591,7 +593,6 @@ func (m model) tablePackages() string {
 	b.WriteString("\n")
 
 	for i, p := range m.pkgs {
-		// この OS で導入できないものは、存在だけ見えるようにグレーで出す
 		if !p.Supported() {
 			b.WriteString(fmt.Sprintf("%s%s %s  %s %s\n",
 				m.cursorCell(i), skipStyle.Render("·"), skipStyle.Render(pad(p.Name, idw)),
@@ -728,7 +729,6 @@ func (m model) detail() string {
 			}
 		}
 		if p.ViaScript() {
-			// パッケージマネージャの管理外。削除できないことを明示する
 			b.WriteString(fmt.Sprintf("%s  %s  %s\n",
 				subtleStyle.Render(pad("script", 7)), p.Script, state))
 			b.WriteString(subtleStyle.Render(pad("", 7)) + "  " +
@@ -832,25 +832,41 @@ func (m model) viewRunning() string {
 	}
 	b.WriteString("\n\n")
 
-	maxLines := m.height - 8
-	if maxLines < 5 {
-		maxLines = 5
-	}
+	maxLines := m.logWindow()
 	logs := m.logs
-	if len(logs) > maxLines {
-		logs = logs[len(logs)-maxLines:]
-	}
-	for _, e := range logs {
-		b.WriteString("  " + renderEvent(e) + "\n")
+	end := max(len(logs)-m.logScroll, min(maxLines, len(logs)))
+	start := max(end-maxLines, 0)
+	for _, e := range logs[start:end] {
+		line := renderEvent(e)
+		if m.act == actDiff && e.Level == run.LevelInfo {
+			line = renderDiffLine(e.Text)
+		}
+		b.WriteString("  " + line + "\n")
 	}
 
 	b.WriteString("\n")
-	if m.running {
+	switch {
+	case m.running:
 		b.WriteString(" " + descStyle.Render("完了までお待ちください"))
-	} else {
+	case len(m.logs) > maxLines:
+		pos := ""
+		if m.logScroll > 0 {
+			pos = descStyle.Render(fmt.Sprintf("  (末尾から %d 行上)", m.logScroll))
+		}
+		b.WriteString(" " + keyStyle.Render("↑↓") + descStyle.Render(" スクロール · ") +
+			keyStyle.Render("他のキー") + descStyle.Render(" で一覧に戻る") + pos)
+	default:
 		b.WriteString(" " + keyStyle.Render("任意のキー") + descStyle.Render(" で一覧に戻る"))
 	}
 	return b.String()
+}
+
+func (m model) logWindow() int {
+	n := m.height - 8
+	if n < 5 {
+		n = 5
+	}
+	return n
 }
 
 func renderEvent(e run.Event) string {
@@ -866,6 +882,28 @@ func renderEvent(e run.Event) string {
 	default:
 		return textStyle.Render(e.Text)
 	}
+}
+
+// unified diff の 1 行を色分けする。run.Stream が行頭に足す 2 スペースを除いて判定する。
+func renderDiffLine(s string) string {
+	line := strings.TrimPrefix(s, "  ")
+	switch {
+	case strings.HasPrefix(line, "diff --git"):
+		return diffFileStyle.Render(s)
+	case strings.HasPrefix(line, "+++"), strings.HasPrefix(line, "---"),
+		strings.HasPrefix(line, "index "), strings.HasPrefix(line, "old mode"),
+		strings.HasPrefix(line, "new mode"), strings.HasPrefix(line, "new file"),
+		strings.HasPrefix(line, "deleted file"), strings.HasPrefix(line, "rename "),
+		strings.HasPrefix(line, "similarity "):
+		return subtleStyle.Render(s)
+	case strings.HasPrefix(line, "@@"):
+		return diffHunkStyle.Render(s)
+	case strings.HasPrefix(line, "+"):
+		return diffAddStyle.Render(s)
+	case strings.HasPrefix(line, "-"):
+		return diffDelStyle.Render(s)
+	}
+	return subtleStyle.Render(s)
 }
 
 func (m model) viewHelp() string {
@@ -920,7 +958,6 @@ func (m model) viewHelp() string {
 		keyStyle.Render("任意のキー") + descStyle.Render(" で戻る")
 }
 
-// pad は表示幅を考慮して右埋めする。
 func pad(s string, w int) string {
 	diff := w - lipgloss.Width(s)
 	if diff <= 0 {
