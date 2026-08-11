@@ -1,0 +1,8 @@
+{{- /* OS ごとに配置しないものを除外する。パターンはターゲット (destDir) からの相対パス。 */ -}}
+{{ if ne .chezmoi.os "darwin" }}
+.config/herdr
+{{ end }}
+{{ if ne .chezmoi.os "windows" }}
+AppData
+.config/powershell
+{{ end }}

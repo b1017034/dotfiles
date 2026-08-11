@@ -1,0 +1,76 @@
+# インストールするパッケージの定義。
+#
+# このファイルは 2 か所から読まれる:
+#   - .chezmoiscripts/run_onchange_after_10-install-packages.*  (chezmoi apply 時の自動導入)
+#   - ./dotfiles (Go 製 TUI / CLI)
+# パッケージを増減するときはここだけ触れば両方に反映される。
+#
+# .chezmoidata 配下はテンプレートデータのルートにマージされるので、
+# テンプレートからは .packages のように参照する。
+# このファイル自身はテンプレートにできない。
+#
+# 1 パッケージ 1 ブロック。OS ごとの識別子を並べて書く:
+#
+#   name         表示名。必須
+#   description  一覧に出す説明
+#   brew         macOS の formula / cask 名。無ければ macOS では導入対象外
+#   winget       Windows の package ID。無ければ Windows では導入対象外
+#
+# パッケージマネージャに存在しないものは、OS 別のサブテーブルで逃がす:
+#
+#   [packages.darwin] / [packages.windows]
+#     script  導入コマンド。sh -c (macOS) / pwsh -Command (Windows) で実行される
+#     check   このコマンドが PATH にあれば導入済みとみなす
+#
+#   script で入れたものはパッケージマネージャの管理外なので uninstall はできない。
+
+[[packages]]
+name = "chezmoi"
+description = "dotfiles manager"
+brew = "chezmoi"
+winget = "twpayne.chezmoi"
+
+[[packages]]
+name = "starship"
+description = "cross-shell prompt"
+brew = "starship"
+winget = "Starship.Starship"
+
+[[packages]]
+name = "neovim"
+description = "editor"
+brew = "neovim"
+winget = "Neovim.Neovim"
+
+[[packages]]
+name = "ripgrep"
+description = "fast grep"
+brew = "ripgrep"
+winget = "BurntSushi.ripgrep.MSVC"
+
+[[packages]]
+name = "tree-sitter"
+description = "parser generator CLI"
+brew = "tree-sitter"
+winget = "tree-sitter.tree-sitter-cli"
+
+[[packages]]
+name = "herdr"
+description = "terminal agent manager"
+brew = "herdr"
+
+  # winget にも scoop にも無い。公式が案内しているのは以下のみ。
+  # Windows 版は beta 扱い。https://herdr.dev/docs/install/
+  [packages.windows]
+  script = "irm https://herdr.dev/install.ps1 | iex"
+  check = "herdr"
+
+[[packages]]
+name = "wtq"
+description = "quake style terminal"
+winget = "windows-terminal-quake"
+
+[[packages]]
+name = "7zip"
+description = "archiver"
+winget = "7zip.7zip"

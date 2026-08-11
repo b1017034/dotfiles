@@ -1,0 +1,40 @@
+{{ if eq .chezmoi.os "windows" -}}
+# .chezmoidata/packages.toml のうち Windows で導入できるものを入れる。
+# run_onchange_ なので、下の展開結果が変わったとき (= パッケージを増減したとき) だけ走る。
+$ErrorActionPreference = 'Stop'
+
+# winget で入れるもの。要素は改行区切りでよい (末尾カンマを気にしなくて済む)。
+$ids = @(
+{{- range .packages }}
+{{- if hasKey . "winget" }}
+    '{{ .winget }}'
+{{- end }}
+{{- end }}
+)
+
+if ($ids.Count -gt 0) {
+    if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
+        Write-Warning 'winget が見つかりません。App Installer を入れてください'
+    } else {
+        foreach ($id in $ids) {
+            winget list --id $id --exact --disable-interactivity --accept-source-agreements 2>&1 | Out-Null
+            if ($LASTEXITCODE -eq 0) {
+                Write-Host "skip: $id"
+                continue
+            }
+            Write-Host "installing: $id"
+            winget install --id $id --exact --silent --disable-interactivity `
+                --accept-source-agreements --accept-package-agreements
+        }
+    }
+}
+{{ range .packages }}{{ if hasKey . "windows" }}
+# winget に無いので script で入れる
+if (Get-Command {{ .windows.check }} -ErrorAction SilentlyContinue) {
+    Write-Host 'skip: {{ .name }}'
+} else {
+    Write-Host 'installing: {{ .name }}'
+    {{ .windows.script }}
+}
+{{ end }}{{ end }}
+{{ end -}}

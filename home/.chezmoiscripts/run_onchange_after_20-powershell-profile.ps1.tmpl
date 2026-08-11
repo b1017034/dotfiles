@@ -1,0 +1,20 @@
+{{ if eq .chezmoi.os "windows" -}}
+# $PROFILE に「本体を読み込む 1 行」だけを書き込む。
+#
+# profile の実体は chezmoi が管理する ~/.config/powershell/profile.ps1 に置く。
+# $PROFILE の場所は PowerShell 自身が解決するので、OneDrive による Documents の
+# リダイレクトやホスト (pwsh / Windows PowerShell / VSCode) の違いに追従できる。
+$ErrorActionPreference = 'Stop'
+
+$line = '. "$HOME\.config\powershell\profile.ps1"'
+$target = $PROFILE.CurrentUserAllHosts
+
+New-Item -ItemType Directory -Force -Path (Split-Path -Parent $target) | Out-Null
+
+if ((Test-Path $target) -and (Select-String -Path $target -SimpleMatch $line -Quiet)) {
+    Write-Host "skip: $target"
+} else {
+    Write-Host "adding stub to: $target"
+    Add-Content -Path $target -Value $line
+}
+{{ end -}}
