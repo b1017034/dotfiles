@@ -1,4 +1,4 @@
-// Package ui は Bubble Tea による管理画面。
+// Package ui は Bubble Tea による chezmoi の操作画面。
 package ui
 
 import (
@@ -10,7 +10,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 
 	"github.com/b1017034/dotfiles/internal/chezmoi"
-	"github.com/b1017034/dotfiles/internal/packages"
 	"github.com/b1017034/dotfiles/internal/run"
 )
 
@@ -23,37 +22,16 @@ const (
 	modeHelp
 )
 
-type tab int
-
-const (
-	tabPackages tab = iota
-	tabConfigs
-	numTabs
-)
-
-func (t tab) String() string {
-	if t == tabConfigs {
-		return "Configs"
-	}
-	return "Packages"
-}
-
 type action int
 
 const (
-	actInstall action = iota
-	actUninstall
-	actApply
+	actApply action = iota
 	actDiff
 	actReAdd
 )
 
 func (a action) String() string {
 	switch a {
-	case actInstall:
-		return "install"
-	case actUninstall:
-		return "uninstall"
 	case actApply:
 		return "apply"
 	case actDiff:
@@ -64,8 +42,7 @@ func (a action) String() string {
 	return "?"
 }
 
-type pkgStatusMsg []bool
-type cfgStatusMsg struct {
+type statusMsg struct {
 	entries []chezmoi.Entry
 	err     error
 }
@@ -73,19 +50,14 @@ type logMsg run.Event
 type doneMsg struct{}
 
 type model struct {
-	cz   *chezmoi.Client
-	pm   packages.Manager
-	pkgs []packages.Package
+	cz *chezmoi.Client
 
-	installed  []bool
-	entries    []chezmoi.Entry
-	pkgLoading bool
-	cfgLoading bool
-	cfgErr     string
+	entries []chezmoi.Entry
+	loading bool
+	errMsg  string
 
-	tab      tab
-	cursor   [numTabs]int
-	selected [numTabs]map[int]bool
+	cursor   int
+	selected map[int]bool
 
 	mode    mode
 	prev    mode
@@ -98,7 +70,7 @@ type model struct {
 	eventCh chan run.Event
 	running bool
 	title   string
-	act action
+	act     action
 	// 実行結果の表示を末尾から何行さかのぼっているか
 	logScroll int
 
@@ -106,23 +78,18 @@ type model struct {
 	height int
 }
 
-func Run(cz *chezmoi.Client, pm packages.Manager, pkgs []packages.Package) error {
+func Run(cz *chezmoi.Client) error {
 	s := spinner.New()
 	s.Spinner = spinner.Dot
 	s.Style = lipgloss.NewStyle().Foreground(colAccent)
 
 	m := model{
-		cz:         cz,
-		pm:         pm,
-		pkgs:       pkgs,
-		spin:       s,
-		pkgLoading: true,
-		cfgLoading: true,
-		width:      90,
-		height:     30,
-	}
-	for i := range m.selected {
-		m.selected[i] = map[int]bool{}
+		cz:       cz,
+		spin:     s,
+		loading:  true,
+		selected: map[int]bool{},
+		width:    90,
+		height:   30,
 	}
 
 	p := tea.NewProgram(m, tea.WithAltScreen())
@@ -131,26 +98,14 @@ func Run(cz *chezmoi.Client, pm packages.Manager, pkgs []packages.Package) error
 }
 
 func (m model) Init() tea.Cmd {
-	return tea.Batch(m.spin.Tick, m.refreshPkgCmd(), m.refreshCfgCmd())
+	return tea.Batch(m.spin.Tick, m.refreshCmd())
 }
 
-func (m model) refreshPkgCmd() tea.Cmd {
-	pm, pkgs := m.pm, m.pkgs
-	return func() tea.Msg {
-		pm.Refresh()
-		out := make([]bool, len(pkgs))
-		for i, p := range pkgs {
-			out[i] = packages.Installed(pm, p)
-		}
-		return pkgStatusMsg(out)
-	}
-}
-
-func (m model) refreshCfgCmd() tea.Cmd {
+func (m model) refreshCmd() tea.Cmd {
 	cz := m.cz
 	return func() tea.Msg {
 		entries, err := cz.Status()
-		return cfgStatusMsg{entries: entries, err: err}
+		return statusMsg{entries: entries, err: err}
 	}
 }
 
@@ -167,21 +122,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.spin, cmd = m.spin.Update(msg)
 		return m, cmd
 
-	case pkgStatusMsg:
-		m.installed = []bool(msg)
-		m.pkgLoading = false
-		return m, nil
-
-	case cfgStatusMsg:
+	case statusMsg:
 		m.entries = msg.entries
-		m.cfgErr = ""
+		m.errMsg = ""
 		if msg.err != nil {
-			m.cfgErr = msg.err.Error()
+			m.errMsg = msg.err.Error()
 		}
-		m.cfgLoading = false
-		m.selected[tabConfigs] = map[int]bool{}
-		if m.cursor[tabConfigs] >= len(m.entries) {
-			m.cursor[tabConfigs] = max(0, len(m.entries)-1)
+		m.loading = false
+		m.selected = map[int]bool{}
+		if m.cursor >= len(m.entries) {
+			m.cursor = max(0, len(m.entries)-1)
 		}
 		return m, nil
 
@@ -191,9 +141,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case doneMsg:
 		m.running = false
-		m.pkgLoading = true
-		m.cfgLoading = true
-		return m, tea.Batch(m.refreshPkgCmd(), m.refreshCfgCmd())
+		m.loading = true
+		return m, m.refreshCmd()
 
 	case tea.KeyMsg:
 		return m.handleKey(msg)
@@ -248,88 +197,57 @@ func (m model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "q", "esc":
 		return m, tea.Quit
 
-	case "tab", "right", "l":
-		m.tab = (m.tab + 1) % numTabs
-	case "shift+tab", "left", "h":
-		m.tab = (m.tab + numTabs - 1) % numTabs
-	case "1":
-		m.tab = tabPackages
-	case "2":
-		m.tab = tabConfigs
-
 	case "up", "k":
-		if m.cursor[m.tab] > 0 {
-			m.cursor[m.tab]--
+		if m.cursor > 0 {
+			m.cursor--
 		}
 	case "down", "j":
-		if m.cursor[m.tab] < m.rows()-1 {
-			m.cursor[m.tab]++
+		if m.cursor < len(m.entries)-1 {
+			m.cursor++
 		}
 	case "home", "g":
-		m.cursor[m.tab] = 0
+		m.cursor = 0
 	case "end", "G":
-		m.cursor[m.tab] = max(0, m.rows()-1)
+		m.cursor = max(0, len(m.entries)-1)
 
 	case " ", "x":
-		i := m.cursor[m.tab]
-		if m.rows() == 0 || !m.selectable(i) {
+		if len(m.entries) == 0 {
 			break
 		}
-		if m.selected[m.tab][i] {
-			delete(m.selected[m.tab], i)
+		if m.selected[m.cursor] {
+			delete(m.selected, m.cursor)
 		} else {
-			m.selected[m.tab][i] = true
+			m.selected[m.cursor] = true
 		}
 	case "a":
-		all := map[int]bool{}
-		for i := 0; i < m.rows(); i++ {
-			if m.selectable(i) {
-				all[i] = true
-			}
-		}
-		if len(m.selected[m.tab]) == len(all) {
-			m.selected[m.tab] = map[int]bool{}
+		if len(m.selected) == len(m.entries) {
+			m.selected = map[int]bool{}
 		} else {
-			m.selected[m.tab] = all
+			for i := range m.entries {
+				m.selected[i] = true
+			}
 		}
 
-	case "i":
-		if m.tab == tabPackages {
-			return m.start(actInstall)
-		}
-	case "X":
-		if m.tab == tabPackages {
-			m.pending = actUninstall
-			m.mode = modeConfirm
-			return m, nil
-		}
 	case "A":
-		if m.tab == tabConfigs {
-			// chezmoi 自身も上書き確認を出すが、この画面では答えられないので先に聞く
-			if len(chezmoi.LocallyModified(m.entries, m.cfgPaths())) > 0 {
-				m.pending = actApply
-				m.force = true
-				m.mode = modeConfirm
-				return m, nil
-			}
-			m.force = false
-			return m.start(actApply)
-		}
-	case "d":
-		if m.tab == tabConfigs {
-			return m.start(actDiff)
-		}
-	case "R":
-		if m.tab == tabConfigs {
-			m.pending = actReAdd
+		// chezmoi 自身も上書き確認を出すが、この画面では答えられないので先に聞く
+		if len(chezmoi.LocallyModified(m.entries, m.cfgPaths())) > 0 {
+			m.pending = actApply
+			m.force = true
 			m.mode = modeConfirm
 			return m, nil
 		}
+		m.force = false
+		return m.start(actApply)
+	case "d":
+		return m.start(actDiff)
+	case "R":
+		m.pending = actReAdd
+		m.mode = modeConfirm
+		return m, nil
 
 	case "r":
-		m.pkgLoading = true
-		m.cfgLoading = true
-		return m, tea.Batch(m.refreshPkgCmd(), m.refreshCfgCmd())
+		m.loading = true
+		return m, m.refreshCmd()
 
 	case "?":
 		m.prev = m.mode
@@ -340,35 +258,21 @@ func (m model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m model) rows() int {
-	if m.tab == tabConfigs {
-		return len(m.entries)
-	}
-	return len(m.pkgs)
-}
-
-func (m model) selectable(i int) bool {
-	if m.tab != tabPackages {
-		return true
-	}
-	return i < len(m.pkgs) && m.pkgs[i].Supported()
-}
-
 // 操作対象の index。選択が無ければカーソル行。
 func (m model) targets() []int {
 	var out []int
-	for i := 0; i < m.rows(); i++ {
-		if m.selected[m.tab][i] && m.selectable(i) {
+	for i := range m.entries {
+		if m.selected[i] {
 			out = append(out, i)
 		}
 	}
-	if len(out) == 0 && m.rows() > 0 && m.selectable(m.cursor[m.tab]) {
-		out = []int{m.cursor[m.tab]}
+	if len(out) == 0 && len(m.entries) > 0 {
+		out = []int{m.cursor}
 	}
 	return out
 }
 
-// Configs タブの操作対象パス。差分が無ければ nil (= 全体が対象)。
+// 操作対象のパス。差分が無ければ nil (= 全体が対象)。
 func (m model) cfgPaths() []string {
 	var out []string
 	for _, i := range m.targets() {
@@ -378,22 +282,7 @@ func (m model) cfgPaths() []string {
 }
 
 func (m model) start(act action) (tea.Model, tea.Cmd) {
-	var (
-		pkgTargets []packages.Package
-		paths      []string
-	)
-
-	switch act {
-	case actInstall, actUninstall:
-		for _, i := range m.targets() {
-			pkgTargets = append(pkgTargets, m.pkgs[i])
-		}
-		if len(pkgTargets) == 0 {
-			return m, nil
-		}
-	default:
-		paths = m.cfgPaths()
-	}
+	paths := m.cfgPaths()
 
 	ch := make(chan run.Event, 128)
 	m.eventCh = ch
@@ -404,15 +293,11 @@ func (m model) start(act action) (tea.Model, tea.Cmd) {
 	m.act = act
 	m.logScroll = 0
 
-	cz, pm, force := m.cz, m.pm, m.force
+	cz, force := m.cz, m.force
 
 	go func() {
 		rep := run.Reporter(func(e run.Event) { ch <- e })
 		switch act {
-		case actInstall:
-			installPkgs(pm, pkgTargets, rep)
-		case actUninstall:
-			uninstallPkgs(pm, pkgTargets, rep)
 		case actApply:
 			cz.Apply(rep, force, paths...) //nolint:errcheck // ログに出している
 		case actDiff:
@@ -424,48 +309,6 @@ func (m model) start(act action) (tea.Model, tea.Cmd) {
 	}()
 
 	return m, tea.Batch(m.spin.Tick, waitEvent(ch))
-}
-
-func installPkgs(pm packages.Manager, targets []packages.Package, rep run.Reporter) {
-	for _, p := range targets {
-		if !p.ViaScript() && !pm.Available() {
-			rep.Err("[%s] %s が見つかりません", p.Name, pm.Name())
-			continue
-		}
-		if packages.Installed(pm, p) {
-			rep.Skip("[%s] 導入済みです", p.Name)
-			continue
-		}
-		if err := packages.Install(pm, p, rep); err != nil {
-			rep.Err("[%s] インストールに失敗しました: %v", p.Name, err)
-			continue
-		}
-		packages.Forget(pm, p)
-		rep.OK("[%s] installed", p.Name)
-	}
-}
-
-func uninstallPkgs(pm packages.Manager, targets []packages.Package, rep run.Reporter) {
-	for _, p := range targets {
-		if p.ViaScript() {
-			rep.Skip("[%s] script で導入したものなので削除できません", p.Name)
-			continue
-		}
-		if !pm.Available() {
-			rep.Err("[%s] %s が見つかりません", p.Name, pm.Name())
-			continue
-		}
-		if !packages.Installed(pm, p) {
-			rep.Skip("[%s] 導入されていません", p.Name)
-			continue
-		}
-		if err := packages.Uninstall(pm, p, rep); err != nil {
-			rep.Err("[%s] アンインストールに失敗しました: %v", p.Name, err)
-			continue
-		}
-		packages.Forget(pm, p)
-		rep.OK("[%s] uninstalled", p.Name)
-	}
 }
 
 func waitEvent(ch chan run.Event) tea.Cmd {
@@ -496,15 +339,8 @@ func (m model) viewList() string {
 	var b strings.Builder
 
 	b.WriteString(m.header())
-	b.WriteString("\n")
-	b.WriteString(m.tabs())
 	b.WriteString("\n\n")
-
-	if m.tab == tabConfigs {
-		b.WriteString(m.tableConfigs())
-	} else {
-		b.WriteString(m.tablePackages())
-	}
+	b.WriteString(m.table())
 	b.WriteString("\n")
 	b.WriteString(m.detail())
 
@@ -522,12 +358,10 @@ func (m model) header() string {
 	left := titleStyle.Render("dotfiles")
 
 	sel := ""
-	if n := len(m.selected[m.tab]); n > 0 {
+	if n := len(m.selected); n > 0 {
 		sel = selectedStyle.Render(fmt.Sprintf(" · %d selected", n))
 	}
-
-	right := subtleStyle.Render(fmt.Sprintf("%s · %s · chezmoi",
-		packages.HostLabel(), m.pm.Name())) + sel
+	right := subtleStyle.Render("chezmoi") + sel
 
 	gap := m.width - lipgloss.Width(left) - lipgloss.Width(right) - 1
 	if gap < 1 {
@@ -536,90 +370,11 @@ func (m model) header() string {
 	return " " + left + strings.Repeat(" ", gap) + right
 }
 
-func (m model) tabs() string {
-	sup := 0
-	for _, p := range m.pkgs {
-		if p.Supported() {
-			sup++
-		}
+func (m model) table() string {
+	if m.errMsg != "" {
+		return " " + errStyle.Render(m.errMsg) + "\n"
 	}
-	pkgCount := fmt.Sprintf("%d", len(m.pkgs))
-	if sup != len(m.pkgs) {
-		pkgCount = fmt.Sprintf("%d/%d", sup, len(m.pkgs))
-	}
-
-	counts := []string{
-		pkgCount,
-		fmt.Sprintf("%d", len(m.entries)),
-	}
-	if m.cfgLoading {
-		counts[1] = "…"
-	}
-	if m.pkgLoading {
-		counts[0] = "…"
-	}
-
-	// タブは下ボーダー付きの 2 行ブロックなので、文字列連結ではなく横に並べる
-	parts := []string{" "}
-	for t := tabPackages; t < numTabs; t++ {
-		if t > tabPackages {
-			parts = append(parts, " ")
-		}
-		label := fmt.Sprintf(" %d %s (%s) ", t+1, t, counts[t])
-		if t == m.tab {
-			parts = append(parts, tabActiveStyle.Render(label))
-		} else {
-			parts = append(parts, tabStyle.Render(label))
-		}
-	}
-	return lipgloss.JoinHorizontal(lipgloss.Top, parts...)
-}
-
-func (m model) tablePackages() string {
-	if len(m.pkgs) == 0 {
-		return " " + subtleStyle.Render("管理対象のパッケージがありません") + "\n"
-	}
-
-	idw := 4
-	for _, p := range m.pkgs {
-		if lipgloss.Width(p.Name) > idw {
-			idw = lipgloss.Width(p.Name)
-		}
-	}
-
-	var b strings.Builder
-	b.WriteString(headerStyle.Render(fmt.Sprintf("   %s  %s %s",
-		pad("PACKAGE", idw), pad("STATE", 18), "DESCRIPTION")))
-	b.WriteString("\n")
-
-	for i, p := range m.pkgs {
-		if !p.Supported() {
-			b.WriteString(fmt.Sprintf("%s%s %s  %s %s\n",
-				m.cursorCell(i), skipStyle.Render("·"), skipStyle.Render(pad(p.Name, idw)),
-				pad(skipStyle.Render("— "+p.HostsLabel()+" のみ"), 18), skipStyle.Render(p.Desc)))
-			continue
-		}
-
-		state := skipStyle.Render("…")
-		if !m.pkgLoading && i < len(m.installed) {
-			if m.installed[i] {
-				state = okStyle.Render("✔ installed")
-			} else {
-				state = warnStyle.Render("✘ not installed")
-			}
-		}
-		b.WriteString(fmt.Sprintf("%s%s %s  %s %s\n",
-			m.cursorCell(i), m.markCell(i), m.nameCell(i, p.Name, idw),
-			pad(state, 18), subtleStyle.Render(p.Desc)))
-	}
-	return b.String()
-}
-
-func (m model) tableConfigs() string {
-	if m.cfgErr != "" {
-		return " " + errStyle.Render(m.cfgErr) + "\n"
-	}
-	if m.cfgLoading {
+	if m.loading {
 		return " " + subtleStyle.Render("chezmoi status を確認中…") + "\n"
 	}
 	if len(m.entries) == 0 {
@@ -648,21 +403,21 @@ func (m model) tableConfigs() string {
 }
 
 func (m model) cursorCell(i int) string {
-	if i == m.cursor[m.tab] {
+	if i == m.cursor {
 		return cursorStyle.Render("❯ ")
 	}
 	return "  "
 }
 
 func (m model) markCell(i int) string {
-	if m.selected[m.tab][i] {
+	if m.selected[i] {
 		return selectedStyle.Render("◉")
 	}
 	return skipStyle.Render("○")
 }
 
 func (m model) nameCell(i int, s string, w int) string {
-	if i == m.cursor[m.tab] {
+	if i == m.cursor {
 		return cursorStyle.Render(pad(s, w))
 	}
 	return textStyle.Render(pad(s, w))
@@ -689,57 +444,16 @@ func entryLabel(e chezmoi.Entry) string {
 }
 
 func (m model) detail() string {
-	if m.tab == tabConfigs {
-		if len(m.entries) == 0 || m.cursor[tabConfigs] >= len(m.entries) {
-			return m.box("chezmoi", subtleStyle.Render(
-				"A で apply、d で diff、R でターゲット側の変更をソースに取り込みます"))
-		}
-		e := m.entries[m.cursor[tabConfigs]]
-		body := fmt.Sprintf("%s  %s\n%s  %s\n%s  %s",
-			subtleStyle.Render(pad("path", 7)), e.Path,
-			subtleStyle.Render(pad("code", 7)), e.Code(),
-			subtleStyle.Render(pad("state", 7)), entryLabel(e))
-		return m.box(chezmoi.Short(e.Path), body)
+	if len(m.entries) == 0 || m.cursor >= len(m.entries) {
+		return m.box("chezmoi", subtleStyle.Render(
+			"A で apply、d で diff、R でターゲット側の変更をソースに取り込みます"))
 	}
-
-	if len(m.pkgs) == 0 {
-		return ""
-	}
-	p := m.pkgs[m.cursor[tabPackages]]
-
-	var b strings.Builder
-	if p.Desc != "" {
-		b.WriteString(subtleStyle.Render(p.Desc))
-		b.WriteString("\n")
-	}
-	b.WriteString(subtleStyle.Render(pad("対応", 7)) + "  " + p.HostsLabel() + "\n")
-
-	switch {
-	case !p.Supported():
-		b.WriteString(subtleStyle.Render(pad("", 7)) + "  " +
-			skipStyle.Render(packages.HostLabel()+" では導入できないため操作できません"))
-
-	default:
-		state := skipStyle.Render("確認中…")
-		if !m.pkgLoading && m.cursor[tabPackages] < len(m.installed) {
-			if m.installed[m.cursor[tabPackages]] {
-				state = okStyle.Render("installed")
-			} else {
-				state = warnStyle.Render("not installed")
-			}
-		}
-		if p.ViaScript() {
-			b.WriteString(fmt.Sprintf("%s  %s  %s\n",
-				subtleStyle.Render(pad("script", 7)), p.Script, state))
-			b.WriteString(subtleStyle.Render(pad("", 7)) + "  " +
-				skipStyle.Render("script 導入のため uninstall は非対応"))
-		} else {
-			b.WriteString(fmt.Sprintf("%s  %s  %s",
-				subtleStyle.Render(pad(m.pm.Name(), 7)), p.ID, state))
-		}
-	}
-
-	return m.box(p.Name, b.String())
+	e := m.entries[m.cursor]
+	body := fmt.Sprintf("%s  %s\n%s  %s\n%s  %s",
+		subtleStyle.Render(pad("path", 7)), e.Path,
+		subtleStyle.Render(pad("code", 7)), e.Code(),
+		subtleStyle.Render(pad("state", 7)), entryLabel(e))
+	return m.box(chezmoi.Short(e.Path), body)
 }
 
 func (m model) box(title, body string) string {
@@ -756,12 +470,6 @@ func (m model) confirmBox() string {
 	var headline, note string
 
 	switch m.pending {
-	case actUninstall:
-		for _, i := range m.targets() {
-			names = append(names, m.pkgs[i].Name)
-		}
-		headline = "アンインストールします"
-		note = "パッケージを削除します。設定ファイルは chezmoi 管理のまま残ります   "
 	case actReAdd:
 		for _, p := range m.cfgPaths() {
 			names = append(names, chezmoi.Short(p))
@@ -793,25 +501,16 @@ func (m model) confirmBox() string {
 
 func (m model) footer() string {
 	keys := [][2]string{
-		{"tab", "タブ"},
 		{"↑↓", "移動"},
 		{"space", "選択"},
 		{"a", "全選択"},
+		{"A", "apply"},
+		{"d", "diff"},
+		{"R", "re-add"},
+		{"r", "更新"},
+		{"?", "ヘルプ"},
+		{"q", "終了"},
 	}
-	if m.tab == tabConfigs {
-		keys = append(keys,
-			[2]string{"A", "apply"},
-			[2]string{"d", "diff"},
-			[2]string{"R", "re-add"})
-	} else {
-		keys = append(keys,
-			[2]string{"i", "install"},
-			[2]string{"X", "uninstall"})
-	}
-	keys = append(keys,
-		[2]string{"r", "更新"},
-		[2]string{"?", "ヘルプ"},
-		[2]string{"q", "終了"})
 
 	var parts []string
 	for _, k := range keys {
@@ -908,19 +607,15 @@ func renderDiffLine(s string) string {
 
 func (m model) viewHelp() string {
 	rows := [][2]string{
-		{"tab / 1 2", "タブ切替 (Packages / Configs)"},
 		{"↑ / k", "上へ"},
 		{"↓ / j", "下へ"},
 		{"g / G", "先頭 / 末尾"},
 		{"space", "選択のトグル"},
 		{"a", "全選択 / 全解除"},
 		{"", ""},
-		{"i", "install    パッケージを導入 (Packages)"},
-		{"X", "uninstall  パッケージを削除。確認あり (Packages)"},
-		{"", ""},
-		{"A", "apply      chezmoi apply (Configs)"},
-		{"d", "diff       chezmoi diff (Configs)"},
-		{"R", "re-add     ターゲットの変更をソースへ。確認あり (Configs)"},
+		{"A", "apply      chezmoi apply"},
+		{"d", "diff       chezmoi diff"},
+		{"R", "re-add     ターゲットの変更をソースへ。確認あり"},
 		{"", ""},
 		{"r", "状態を再取得"},
 		{"?", "このヘルプ"},
@@ -941,12 +636,7 @@ func (m model) viewHelp() string {
 	b.WriteString("\n")
 	b.WriteString(subtleStyle.Render("選択が無いときはカーソル行が対象になります。"))
 	b.WriteString("\n")
-	b.WriteString(subtleStyle.Render("グレーの行は " + packages.HostLabel() +
-		" で導入できないパッケージで、選択できません。"))
-	b.WriteString("\n")
-	b.WriteString(subtleStyle.Render("Configs で差分が無いときは、管理対象すべてが対象になります。"))
-	b.WriteString("\n")
-	b.WriteString(subtleStyle.Render("パッケージの追加は home/.chezmoidata/packages.toml を編集してください。"))
+	b.WriteString(subtleStyle.Render("差分が無いときは、管理対象すべてが対象になります。"))
 	b.WriteString("\n")
 	b.WriteString(subtleStyle.Render("設定ファイルの追加は chezmoi add <path> を使ってください。"))
 

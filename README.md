@@ -1,7 +1,8 @@
 # dotfiles
 
-[chezmoi](https://www.chezmoi.io/) で設定ファイルを配置し、パッケージ導入と chezmoi 操作の
+[chezmoi](https://www.chezmoi.io/) で設定ファイルを配置し、chezmoi 操作の
 フロントエンドとして Go 製 TUI (`./dotfiles`) を乗せている。
+パッケージの導入は `chezmoi apply` 時に `.chezmoiscripts` が行う。
 
 ## セットアップ
 
@@ -22,23 +23,10 @@ apply 時に `.chezmoiscripts` が走り、パッケージも導入される。
 
 - `home/` — chezmoi の source dir。`$HOME` に配置されるのはここだけ
   - `.chezmoiignore` — OS 別の出し分け
-  - `.chezmoidata/packages.toml` — パッケージ定義。導入スクリプトと TUI の両方が読む
+  - `.chezmoidata/packages.toml` — パッケージ定義。導入スクリプトが読む
   - `.chezmoitemplates/herdr-config.toml` — herdr 設定の本体。macOS は `~/.config/herdr/`、
     Windows は `%APPDATA%\herdr\` に配置される
 - `main.go` / `internal/` — TUI
-
-## 日常の操作
-
-```sh
-chezmoi edit <target>   # ソースを編集 (リポジトリを直接編集してもよい)
-chezmoi diff
-chezmoi apply -v
-
-./dotfiles              # TUI。キーは ? で表示
-./dotfiles status | install <name>|all | uninstall <name> | apply | diff
-```
-
-herdr の設定を変えたときは apply 後に `herdr server reload-config`。
 
 ## 管理対象の追加
 

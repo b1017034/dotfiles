@@ -50,15 +50,4 @@ var (
 	diffDelStyle  = lipgloss.NewStyle().Foreground(colRed)
 	diffHunkStyle = lipgloss.NewStyle().Foreground(colPurple)
 	diffFileStyle = lipgloss.NewStyle().Foreground(colText).Bold(true)
-
-	tabStyle = lipgloss.NewStyle().
-			Foreground(colSubtle).
-			Border(lipgloss.NormalBorder(), false, false, true, false).
-			BorderForeground(colSubtle)
-
-	tabActiveStyle = lipgloss.NewStyle().
-			Foreground(colAccent).
-			Bold(true).
-			Border(lipgloss.NormalBorder(), false, false, true, false).
-			BorderForeground(colAccent)
 )
