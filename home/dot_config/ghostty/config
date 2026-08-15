@@ -3,7 +3,9 @@
 
 # macOS の外観 (ライト/ダーク) に追従する。
 # herdr は theme.name = "terminal" でこの配色をそのまま継承する
-theme = light:catppuccin-latte,dark:catppuccin-mocha
+# テーマ名は同梱ファイル名そのまま (空白入り・大文字始まり) でないと解決されない。
+# 一覧は `ghostty +list-themes`
+theme = light:Catppuccin Latte,dark:Catppuccin Mocha
 
 # フォントは Ghostty 同梱の JetBrains Mono をそのまま使う。
 # Nerd Font のグリフは同梱の Symbols Nerd Font に自動フォールバックするので、
@@ -19,5 +21,23 @@ window-save-state = always
 window-padding-x = 8
 window-padding-y = 4
 
+# 背景を 10% 透過する。quick terminal 専用の指定は無いので全ウィンドウに効く
+background-opacity = 0.9
+
 # 分割・タブ・セッション管理は herdr (prefix = ctrl+a) に任せるので、
-# Ghostty 側では keybind を足さない
+# Ghostty 側では keybind を足さない。
+#
+# 例外として quake 風の呼び出しだけ入れる (Windows Terminal の globalSummon と同じ ctrl+i)。
+# global: は macOS ではアクセシビリティ権限が要る。初回起動時に Ghostty が要求するので許可すること。
+# 権限が無いと無言で効かないだけなので注意
+keybind = global:ctrl+i=toggle_quick_terminal
+
+# 画面全体を覆わせる。top 配置なので 100% は高さに効き、幅は自動で最大化される
+quick-terminal-size = 100%
+
+# 出入りのアニメーションを切る (0 で無効)
+quick-terminal-animation-duration = 0
+
+# 物理的な主ディスプレイ (メニューバーのある画面) に固定する。
+# 既定の main は「今キーボード入力を受けている画面」なのでマルチモニタだと追従してしまう
+quick-terminal-screen = macos-menu-bar
