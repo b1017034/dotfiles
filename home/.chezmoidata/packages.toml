@@ -29,6 +29,40 @@ brew = "tree-sitter"
 winget = "tree-sitter.tree-sitter-cli"
 
 [[packages]]
+name = "tmux"
+description = "terminal multiplexer"
+brew = "tmux"
+
+[[packages]]
+name = "gh"
+description = "GitHub CLI"
+brew = "gh"
+winget = "GitHub.cli"
+
+[[packages]]
+name = "ghq"
+description = "repository manager"
+brew = "ghq"
+winget = "x-motemen.ghq"
+
+[[packages]]
+name = "google-chrome"
+description = "web browser"
+brew = "google-chrome"
+winget = "Google.Chrome"
+
+[[packages]]
+name = "karabiner-elements"
+description = "keyboard customizer"
+brew = "karabiner-elements"
+
+[[packages]]
+name = "logitech-g-hub"
+description = "Logitech device manager"
+brew = "logitech-g-hub"
+winget = "Logitech.GHUB"
+
+[[packages]]
 name = "herdr"
 description = "terminal agent manager"
 brew = "herdr"

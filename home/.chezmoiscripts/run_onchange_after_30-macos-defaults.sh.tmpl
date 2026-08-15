@@ -1,0 +1,11 @@
+{{ if eq .chezmoi.os "darwin" -}}
+#!/bin/sh
+# run_onchange_ なので、下の設定値を書き換えたときだけ走る。
+set -eu
+
+# マウスのポインタ加速を切る。-1 が無効の意味。
+# システム設定 > マウス の「軌跡の速さ」を触ると正の値に戻るので、その場合は再 apply する。
+defaults write -g com.apple.mouse.scaling -1
+
+echo "macOS defaults を適用しました (反映にはログアウトが必要です)"
+{{ end -}}
