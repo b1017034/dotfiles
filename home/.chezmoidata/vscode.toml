@@ -1,16 +1,12 @@
 # VSCode 拡張のベースライン。どのマシンにも入れるものだけを書く。
-# インストールスクリプトは不足分を入れるだけでアンインストールはしないので、
-# ここに無い拡張を各マシンで足しても消されない。
 [vscode]
 extensions = [
 	"anthropic.claude-code",
-	"asarchy.vscode-serve-sim",
 	"diemasmichiels.emulate",
 	"eamodio.gitlens",
 	"github.vscode-github-actions",
 	"hediet.vscode-drawio",
 	"jebbs.plantuml",
-	"jetbrains.kotlin",
 	"kangsou.islands-theme",
 	"l-igh-t.vscode-theme-seti-folder",
 	"llvm-vs-code-extensions.lldb-dap",
