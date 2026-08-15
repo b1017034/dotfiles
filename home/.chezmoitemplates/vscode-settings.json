@@ -1,0 +1,101 @@
+{
+    // ===========================================================================
+    // 外観
+    // ===========================================================================
+    "workbench.colorTheme": "Xcode Default (Dark Customized Version)",
+
+    // 選択 = 青系 / カーソル下シンボル = グレー・オレンジ系 で色相を分ける
+    "workbench.colorCustomizations": {
+        // テキスト選択
+        "editor.selectionBackground": "#2D5B8CCC",
+        "editor.selectionHighlightBackground": "#2D5B8C40",
+        "editor.selectionHighlightBorder": "#5A9BD8A0",
+        // カーソル下のシンボル（参照）
+        "editor.wordHighlightBackground": "#70707066",
+        "editor.wordHighlightBorder": "#A0A0A0C0",
+        // カーソル下のシンボル（代入・書き込み）
+        "editor.wordHighlightStrongBackground": "#8A5A2E66",
+        "editor.wordHighlightStrongBorder": "#D2914BC0"
+    },
+
+    // ===========================================================================
+    // エディタ
+    // ===========================================================================
+    // 保存時に行末の空白を削除
+    "files.trimTrailingWhitespace": true,
+
+    // 空白文字は単語間のみ表示（インデントは出さない）
+    "editor.renderWhitespace": "boundary",
+
+    // 保存時に import を整理する。"explicit" なので明示的な保存のときだけ走り、
+    // 自動保存では走らない
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
+    },
+
+    // ===========================================================================
+    // ターミナル
+    // ===========================================================================
+    // コマンド名と引数は補完を出すが、未知の語では出さない（ノイズ抑制）
+    "terminal.integrated.suggest.quickSuggestions": {
+        "commands": "on",
+        "arguments": "on",
+        "unknown": "off"
+    },
+
+    // ===========================================================================
+    // ウィンドウ / ワークスペース
+    // ===========================================================================
+    // 名前なしワークスペースを閉じるときの保存確認を出さない
+    "window.confirmSaveUntitledWorkspace": false,
+
+    // 信頼していないワークスペースでもファイルを開けるようにする（制限モードで開く）
+    "security.workspace.trust.untrustedFiles": "open",
+
+    // ===========================================================================
+    // 拡張機能
+    // ===========================================================================
+    // 拡張の自動更新を止める。破壊的変更が勝手に入るのを防ぐため、更新は手動
+    "extensions.autoCheckUpdates": false,
+    "extensions.autoUpdate": "off",
+
+    // ===========================================================================
+    // Git / GitLens
+    // ===========================================================================
+    "git.autofetch": true,
+
+    // GitLens の AI 機能（コミットメッセージ生成など）は Copilot 経由で使う
+    "gitlens.ai.model": "vscode",
+    "gitlens.ai.vscode.model": "copilot:gpt-4o-mini",
+
+    // ===========================================================================
+    // AI / チャット
+    // ===========================================================================
+    "github.copilot.nextEditSuggestions.enabled": true,
+
+    // チャットのセッション一覧を縦積みで表示
+    "chat.viewSessions.orientation": "stacked",
+
+    // Claude Code はサイドバーではなく下部パネルに出す
+    "claudeCode.preferredLocation": "panel",
+
+    // ===========================================================================
+    // iOS 開発（Sweetpad）
+    // ===========================================================================
+    // `open -a Simulator` ではなく `open -g -a Simulator`
+    "sweetpad.build.bringSimulatorToForeground": false,
+
+    // ===========================================================================
+    // Android（Android iOS Emulator 拡張）
+    // ===========================================================================
+    // TODO: Windows のパスが入ったままで macOS では無効。実際に使うなら
+    // ~/Library/Android/sdk/emulator に直す
+    "emulator.emulatorPath": "C:\\Users\\x\\AppData\\Local\\Android\\Sdk\\emulator",
+
+    // headless + UIElement で、レンダリング時に Java の Dock アイコンを出さない
+    "plantuml.java": "/usr/bin/java",
+    "plantuml.commandArgs": [
+        "-Djava.awt.headless=true",
+        "-Dapple.awt.UIElement=true"
+    ]
+}

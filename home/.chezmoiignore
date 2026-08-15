@@ -5,6 +5,8 @@ AppData
 {{ if eq .chezmoi.os "windows" }}
 .oh-my-zsh
 .zshrc
+{{- /* Windows の VSCode は %APPDATA%\Code\User を読むため Library 側は配置しない */}}
+Library
 {{- /* Ghostty に Windows 版は無い */}}
 .config/ghostty
 {{- /* Windows の herdr は %APPDATA%\herdr\config.toml を読むため .config 側は配置しない */}}

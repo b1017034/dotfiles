@@ -1,0 +1,40 @@
+{{ if eq .chezmoi.os "darwin" -}}
+#!/bin/sh
+# run_onchange_ なので、展開結果が変わったとき (= 拡張を増減したとき) だけ走る。
+# 入れるだけでアンインストールはしないので、このマシンだけで入れた拡張は残る。
+set -eu
+
+want='{{ range .vscode.extensions }}{{ . }} {{ end }}'
+
+# cask が /opt/homebrew/bin/code を張るが、公式インストーラで入れた場合は無いので
+# アプリバンドル内の code に落とす
+code=code
+command -v code >/dev/null 2>&1 || code='/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code'
+
+if [ -z "$want" ]; then
+	:
+elif ! command -v "$code" >/dev/null 2>&1; then
+	echo "code コマンドが見つかりません。VSCode を先に入れてください" >&2
+else
+	installed="$("$code" --list-extensions)"
+
+	missing=''
+	# shellcheck disable=SC2086 # 単語分割して拡張 ID の並びとして扱う
+	for e in $want; do
+		# 拡張 ID は大文字小文字を区別しないので -i を付ける
+		if ! printf '%s\n' "$installed" | grep -qixF "$e"; then
+			missing="$missing $e"
+		fi
+	done
+
+	if [ -n "$missing" ]; then
+		# shellcheck disable=SC2086 # 単語分割して拡張 ID の並びとして扱う
+		for e in $missing; do
+			echo "installing: $e"
+			"$code" --install-extension "$e" --force
+		done
+	else
+		echo "vscode: すべて導入済みです"
+	fi
+fi
+{{ end -}}

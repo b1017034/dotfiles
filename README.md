@@ -18,8 +18,11 @@ sh bootstrap.sh --apply       # Windows: .\bootstrap.ps1 -Apply
   - `.chezmoidata/packages.toml` — パッケージ定義。
   - `.chezmoiexternal.toml` — 外部リポジトリ / アーカイブの取得
     (oh-my-zsh 本体、zsh-autosuggestions、AstroNvim テンプレート)
+  - `.chezmoidata/vscode.toml` — VSCode 拡張のベースライン
   - `.chezmoitemplates/herdr-config.toml` — herdr 設定の本体。macOS は `~/.config/herdr/`、
     Windows は `%APPDATA%\herdr\` に配置される
+  - `.chezmoitemplates/vscode-settings.json` / `vscode-keybindings.json` — VSCode 設定の本体。
+    macOS は `~/Library/Application Support/Code/User/`、Windows は `%APPDATA%\Code\User\`
 - `main.go` / `internal/` — TUI
 
 ## 管理対象の追加
