@@ -41,6 +41,12 @@ brew = "lazygit"
 winget = "JesseDuffield.lazygit"
 
 [[packages]]
+name = "fzf"
+description = "fuzzy finder (cd-dev の dev から使う)"
+brew = "fzf"
+winget = "junegunn.fzf"
+
+[[packages]]
 name = "gh"
 description = "GitHub CLI"
 brew = "gh"
