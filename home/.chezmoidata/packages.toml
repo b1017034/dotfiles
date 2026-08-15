@@ -12,9 +12,15 @@ winget = "Starship.Starship"
 
 [[packages]]
 name = "neovim"
-description = "editor"
+description = "editor (設定は AstroNvim)"
 brew = "neovim"
 winget = "Neovim.Neovim"
+
+[[packages]]
+name = "visual-studio-code"
+description = "editor"
+brew = "visual-studio-code"
+winget = "Microsoft.VisualStudioCode"
 
 [[packages]]
 name = "ripgrep"

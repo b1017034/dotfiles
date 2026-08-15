@@ -9,4 +9,6 @@ AppData
 .config/ghostty
 {{- /* Windows の herdr は %APPDATA%\herdr\config.toml を読むため .config 側は配置しない */}}
 .config/herdr
+{{- /* Windows の Neovim は %LOCALAPPDATA%\nvim を読むため .config 側は配置しない */}}
+.config/nvim
 {{ end }}

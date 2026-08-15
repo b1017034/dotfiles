@@ -15,3 +15,10 @@
 	exact = true
 	stripComponents = 1
 	refreshPeriod = "168h"
+
+# AstroNvim の公式テンプレート。設定は素のまま使っているので直接 clone する。
+# カスタマイズするなら自分のリポジトリを作って url を差し替える
+[".config/nvim"]
+	type = "git-repo"
+	url = "https://github.com/AstroNvim/template.git"
+	refreshPeriod = "168h"
