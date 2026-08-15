@@ -1,0 +1,17 @@
+# oh-my-zsh 本体。git clone ではなく tarball を展開する (履歴が要らないため)。
+# custom/plugins/ 以下は chezmoi 管理なので exact は付けない。付けると
+# アーカイブに無いファイル = 自作プラグインが毎回消される。
+# Windows では .chezmoiignore が .oh-my-zsh を除外するので展開されない。
+[".oh-my-zsh"]
+	type = "archive"
+	url = "https://github.com/ohmyzsh/ohmyzsh/archive/master.tar.gz"
+	stripComponents = 1
+	refreshPeriod = "168h"
+
+# 中身は全部このアーカイブなので exact でよい (本体側と違い自作ファイルを置かない)
+[".oh-my-zsh/custom/plugins/zsh-autosuggestions"]
+	type = "archive"
+	url = "https://github.com/zsh-users/zsh-autosuggestions/archive/master.tar.gz"
+	exact = true
+	stripComponents = 1
+	refreshPeriod = "168h"
