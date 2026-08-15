@@ -22,8 +22,25 @@ else
 
 	if [ -n "$missing" ]; then
 		echo "installing:$missing"
+		# 失敗しても止めない。ここで exit すると chezmoi が後続のスクリプトごと中断するため。
+		# (sudo を要求する cask は非対話の apply では必ず失敗する)
 		# shellcheck disable=SC2086 # 単語分割してパッケージ名の並びとして渡す
-		brew install $missing
+		brew install $missing || true
+
+		installed="$(brew list --formula -1; brew list --cask -1)"
+		failed=''
+		# shellcheck disable=SC2086 # 単語分割してパッケージ名の並びとして扱う
+		for p in $missing; do
+			if ! printf '%s\n' "$installed" | grep -qxF "$p"; then
+				failed="$failed $p"
+			fi
+		done
+
+		if [ -n "$failed" ]; then
+			echo "警告: 入らなかったパッケージ:$failed" >&2
+			echo "      対話端末で 'brew install$failed' を実行してください" >&2
+			echo "      (このスクリプトは packages.toml を変えるまで再実行されません)" >&2
+		fi
 	else
 		echo "brew: すべて導入済みです"
 	fi
