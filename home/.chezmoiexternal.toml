@@ -1,5 +1,0 @@
-# tmux のプラグインマネージャ。tmux.conf 最下部の run 行から呼ばれる
-[".tmux/plugins/tpm"]
-	type = "git-repo"
-	url = "https://github.com/tmux-plugins/tpm.git"
-	refreshPeriod = "168h"

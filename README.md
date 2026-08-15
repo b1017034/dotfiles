@@ -16,7 +16,6 @@ sh bootstrap.sh --apply       # Windows: .\bootstrap.ps1 -Apply
 - `home/` — chezmoi の source dir。
   - `.chezmoiignore` — OS 別の出し分け
   - `.chezmoidata/packages.toml` — パッケージ定義。
-  - `.chezmoiexternal.toml` — 外部リポジトリの取得 (tmux の tpm)
   - `.chezmoitemplates/herdr-config.toml` — herdr 設定の本体。macOS は `~/.config/herdr/`、
     Windows は `%APPDATA%\herdr\` に配置される
 - `main.go` / `internal/` — TUI

@@ -1,0 +1,23 @@
+# Ghostty の設定。全オプションは `ghostty +show-config --default --docs` で一覧できる。
+# 編集したら `ghostty +validate-config` で検証すること。
+
+# macOS の外観 (ライト/ダーク) に追従する。
+# herdr は theme.name = "terminal" でこの配色をそのまま継承する
+theme = light:catppuccin-latte,dark:catppuccin-mocha
+
+# フォントは Ghostty 同梱の JetBrains Mono をそのまま使う。
+# Nerd Font のグリフは同梱の Symbols Nerd Font に自動フォールバックするので、
+# starship のアイコン表示のために font-family を指定する必要はない
+font-size = 14
+
+# option を alt として扱う (zsh の単語単位移動を効かせる)
+macos-option-as-alt = true
+
+# ウィンドウ位置とタブを復元する
+window-save-state = always
+
+window-padding-x = 8
+window-padding-y = 4
+
+# 分割・タブ・セッション管理は herdr (prefix = ctrl+a) に任せるので、
+# Ghostty 側では keybind を足さない

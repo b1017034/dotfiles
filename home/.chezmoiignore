@@ -4,9 +4,8 @@ AppData
 {{ end }}
 {{ if eq .chezmoi.os "windows" }}
 .oh-my-zsh
-{{- /* tmux は Windows では使わない */}}
-.tmux.conf
-.tmux
+{{- /* Ghostty に Windows 版は無い */}}
+.config/ghostty
 {{- /* Windows の herdr は %APPDATA%\herdr\config.toml を読むため .config 側は配置しない */}}
 .config/herdr
 {{ end }}

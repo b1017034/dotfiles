@@ -29,13 +29,14 @@ brew = "tree-sitter"
 winget = "tree-sitter.tree-sitter-cli"
 
 [[packages]]
-name = "tmux"
-description = "terminal multiplexer"
-brew = "tmux"
+name = "ghostty"
+description = "terminal emulator"
+# winget に無い (Windows 版が存在しない) ため macOS のみ
+brew = "ghostty"
 
 [[packages]]
 name = "lazygit"
-description = "git TUI (tmux の prefix + g から開く)"
+description = "git TUI (herdr の prefix+shift+l から開く)"
 brew = "lazygit"
 winget = "JesseDuffield.lazygit"
 
