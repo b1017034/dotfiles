@@ -25,7 +25,9 @@ sh bootstrap.sh --apply       # Windows: .\bootstrap.ps1 -Apply
 
 - 設定ファイル: `chezmoi add <path>`。片方の OS 専用なら `.chezmoiignore` に条件を足す
 - パッケージ: `packages.toml` に `[[packages]]` を足し、`brew` / `winget` の ID を書く。
-  どちらにも無いものは `[packages.windows]` (または darwin) の `script` と `check` で入れる
+  どちらにも無いものは `[packages.windows]` (または darwin) の `script` と `check` で入れる。
+  brew 管理外で入り得る macOS の GUI アプリは `app = "<バンドル名>"` を足すと
+  `/Applications/<バンドル名>.app` の有無で導入済み判定される
 - macOS の OS 設定: `.chezmoiscripts/run_onchange_after_30-macos-defaults.sh.tmpl` に `defaults` を足す
 
 ## ビルド

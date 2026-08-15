@@ -75,6 +75,10 @@ description = "Logitech device manager"
 brew = "logitech-g-hub"
 winget = "Logitech.GHUB"
 
+# 公式インストーラで入れると brew の管理下に入らず、毎回 brew install を
+# 試みて sudo で失敗し続ける。/Applications/<app>.app があれば導入済みと見なす
+app = "lghub"
+
 [[packages]]
 name = "herdr"
 description = "terminal agent manager"
