@@ -1,21 +1,20 @@
-# macOS の外観 (ライト/ダーク) に追従する。
-# herdr は theme.name = "terminal" でこの配色をそのまま継承する
+# macOS の外観 (ライト/ダーク) に追従する
 theme = light:Catppuccin Latte,dark:Catppuccin Mocha
 
 font-size = 14
-# option を alt として扱う (zsh の単語単位移動を効かせる)
+# option を alt として扱う
 macos-option-as-alt = true
 
 window-save-state = always
 window-padding-x = 8
 window-padding-y = 4
 
-# 背景を 10% 透過する。quick terminal 専用の指定は無いので全ウィンドウに効く
+# 背景を 10% 透過する
 background-opacity = 0.9
 
 keybind = global:ctrl+i=toggle_quick_terminal
 
 quick-terminal-size = 100%
 quick-terminal-animation-duration = 0
-# 物理的な主ディスプレイ (メニューバーのある画面) に固定する。
+# 物理的な主ディスプレイ (メニューバーのある画面) に固定する
 quick-terminal-screen = macos-menu-bar

@@ -9,7 +9,7 @@ light_name = "catppuccin-latte"
 delivery = "system"      # エージェントの通知を OS のシステム通知で受け取る
 
 [keys]
-prefix = "ctrl+a"        # tmux で Ctrl+A
+prefix = "ctrl+a"
 
 [[keys.command]]
 key = "prefix+shift+l"
