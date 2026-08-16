@@ -12,7 +12,7 @@ winget = "Starship.Starship"
 
 [[packages]]
 name = "neovim"
-description = "editor (設定は AstroNvim)"
+description = "editor"
 brew = "neovim"
 winget = "Neovim.Neovim"
 
@@ -37,18 +37,17 @@ winget = "tree-sitter.tree-sitter-cli"
 [[packages]]
 name = "ghostty"
 description = "terminal emulator"
-# winget に無い (Windows 版が存在しない) ため macOS のみ
 brew = "ghostty"
 
 [[packages]]
 name = "lazygit"
-description = "git TUI (herdr の prefix+shift+l から開く)"
+description = "git TUI"
 brew = "lazygit"
 winget = "JesseDuffield.lazygit"
 
 [[packages]]
 name = "fzf"
-description = "fuzzy finder (cd-dev の dev から使う)"
+description = "fuzzy finder"
 brew = "fzf"
 winget = "junegunn.fzf"
 

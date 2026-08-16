@@ -1,20 +1,10 @@
-# 共通設定だけを置く。会社 PC 固有の PATH や認証は末尾で読む ~/.zshrc.local に書く
-# (chezmoi 管理外なのでリポジトリには入らない)。
-#
-# brew の PATH は ~/.zprofile が担当するのでここでは触らない。
-
-# 本体は .chezmoiexternal.toml で ~/.oh-my-zsh に展開される
 export ZSH="$HOME/.oh-my-zsh"
 
-# 本体は chezmoi が管理するので oh-my-zsh 自身に自己更新させない。
-# 更新させると chezmoi の管理状態とずれる
 DISABLE_AUTO_UPDATE="true"
 
 # プロンプトは starship に任せるのでテーマは空にする
 ZSH_THEME=""
 
-# cd-dev と xcstrings-diff は home/dot_oh-my-zsh/custom/plugins/ の自作プラグイン。
-# zsh-autosuggestions は .chezmoiexternal.toml で custom/plugins/ に展開される
 plugins=(git cd-dev xcstrings-diff zsh-autosuggestions)
 
 source "$ZSH/oh-my-zsh.sh"
