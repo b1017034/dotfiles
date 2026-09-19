@@ -46,6 +46,12 @@ brew = "lazygit"
 winget = "JesseDuffield.lazygit"
 
 [[packages]]
+name = "mise"
+description = "runtime version manager"
+brew = "mise"
+winget = "jdx.mise"
+
+[[packages]]
 name = "fzf"
 description = "fuzzy finder"
 brew = "fzf"

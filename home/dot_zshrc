@@ -12,4 +12,7 @@ source "$ZSH/oh-my-zsh.sh"
 # oh-my-zsh が設定した PROMPT を上書きするので、必ず後に読むこと
 eval "$(starship init zsh)"
 
+# 各ランタイムを PATH の先頭に置くので、他の PATH 設定より後に読むこと
+eval "$(mise activate zsh)"
+
 [ -f "$HOME/.zshrc.local" ] && source "$HOME/.zshrc.local"
