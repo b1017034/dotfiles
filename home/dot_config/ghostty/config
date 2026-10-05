@@ -19,3 +19,4 @@ quick-terminal-animation-duration = 0
 quick-terminal-autohide = false
 # 物理的な主ディスプレイ (メニューバーのある画面) に固定する
 quick-terminal-screen = macos-menu-bar
+auto-update-channel = tip
