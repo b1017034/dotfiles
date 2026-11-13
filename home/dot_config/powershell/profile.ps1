@@ -7,7 +7,7 @@ if (Get-Command starship -ErrorAction SilentlyContinue) {
 
 # mise (各ランタイムを PATH の先頭に置くので、他の PATH 設定より後に読むこと)
 if (Get-Command mise -ErrorAction SilentlyContinue) {
-    Invoke-Expression (&mise activate pwsh)
+    (& mise activate pwsh) | Out-String | Invoke-Expression
 } else {
     Write-Warning "mise is not installed. See: https://mise.jdx.dev/"
 }

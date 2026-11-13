@@ -1,0 +1,27 @@
+{{ if eq .chezmoi.os "windows" -}}
+# mise activate は対話 PowerShell でしか効かないので、Git Bash や Orca などのエージェント起動でも
+# mise のツールが見えるよう、Windows 版 mise の shims (%LOCALAPPDATA%\mise\shims) をユーザー PATH に足す。
+$ErrorActionPreference = 'Stop'
+
+$entry = '%LOCALAPPDATA%\mise\shims'
+$key = Get-Item 'HKCU:\Environment'
+$path = [string]$key.GetValue('Path', '', 'DoNotExpandEnvironmentNames')
+$parts = @($path -split ';' | Where-Object { $_ })
+$expanded = [Environment]::ExpandEnvironmentVariables($entry)
+
+if ($parts | Where-Object { [Environment]::ExpandEnvironmentVariables($_).TrimEnd('\') -ieq $expanded }) {
+    Write-Host "skip: $entry already in user PATH"
+    return
+}
+
+Write-Host "adding to user PATH: $entry"
+Set-ItemProperty -Path 'HKCU:\Environment' -Name Path -Value (($parts + $entry) -join ';') -Type ExpandString
+
+# 新しく起動するアプリが PATH の変更を読み直すよう通知する
+Add-Type -Namespace Win32 -Name Env -MemberDefinition @'
+[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+public static extern IntPtr SendMessageTimeout(IntPtr hWnd, uint Msg, UIntPtr wParam, string lParam, uint fuFlags, uint uTimeout, out UIntPtr lpdwResult);
+'@
+$result = [UIntPtr]::Zero
+[void][Win32.Env]::SendMessageTimeout([IntPtr]0xffff, 0x1A, [UIntPtr]::Zero, 'Environment', 2, 5000, [ref]$result)
+{{ end -}}

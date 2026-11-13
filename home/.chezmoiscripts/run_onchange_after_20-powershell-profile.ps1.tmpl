@@ -1,6 +1,7 @@
 {{ if eq .chezmoi.os "windows" -}}
 # $PROFILE には本体 (~/.config/powershell/profile.ps1) を読み込む 1 行だけを書く。
 # $PROFILE の場所は PowerShell 自身が解決するので、OneDrive リダイレクトやホストの違いに追従できる。
+# 別の場所 (例: C:\msys64\home\<user>\.config\...) の profile.ps1 を読む古い行は消す。
 $ErrorActionPreference = 'Stop'
 
 $line = '. "$HOME\.config\powershell\profile.ps1"'
@@ -8,10 +9,14 @@ $target = $PROFILE.CurrentUserAllHosts
 
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $target) | Out-Null
 
-if ((Test-Path $target) -and (Select-String -Path $target -SimpleMatch $line -Quiet)) {
+$existing = if (Test-Path $target) { @(Get-Content $target) } else { @() }
+$kept = @($existing | Where-Object { $_ -eq $line -or $_ -notmatch '\.config\\powershell\\profile\.ps1' })
+if ($kept -notcontains $line) { $kept += $line }
+
+if (($kept -join "`n") -eq ($existing -join "`n")) {
     Write-Host "skip: $target"
 } else {
-    Write-Host "adding stub to: $target"
-    Add-Content -Path $target -Value $line
+    Write-Host "writing stub to: $target"
+    Set-Content -Path $target -Value $kept
 }
 {{ end -}}
