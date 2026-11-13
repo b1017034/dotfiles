@@ -32,13 +32,13 @@
     "copyFormatting": "none",
     "startOnUserLogin": true,
     "copyOnSelect": false,
-    "defaultProfile": "{4ff56d04-d9cf-57ea-bae2-ad396374e7e3}",
-    "keybindings":
+    "defaultProfile": "{3aa577b6-1eb5-456b-a1c1-3b6dd1a99368}",
+    "keybindings": 
     [
-        {
-            "id": "User.MyGlobalSummonQuake",
-            "keys": "ctrl+i"
-        },
+//        {
+//            "id": "User.MyGlobalSummonQuake",
+//            "keys": "ctrl+i"
+//        },
         {
             "id": "User.sendInput.8F63D3A9",
             "keys": "shift+enter"

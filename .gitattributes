@@ -1,3 +1,4 @@
 home/dot_zshenv text eol=lf
 home/dot_zshrc text eol=lf
 *.zsh text eol=lf
+home/AppData/Local/Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json text eol=lf
