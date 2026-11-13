@@ -1,4 +1,9 @@
 onboarding = false
+{{- if eq .chezmoi.os "windows" }}
+[terminal]
+default_shell = "C:/msys64/usr/bin/zsh.exe"
+{{- /* shell_mode = "login" は Windows では default_shell を無視して cmd になる (herdr#1445) */}}
+{{- end }}
 [theme]
 name = "terminal"        # 端末エミュレータの配色をそのまま継承
 auto_switch = true       # 端末のライト・ダーク切替に追従

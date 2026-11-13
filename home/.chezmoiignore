@@ -1,6 +1,8 @@
 {{ if ne .chezmoi.os "windows" }}
 AppData
 .config/powershell
+{{- /* MSYS2 の非ログイン起動対策なので Windows 専用 */}}
+.zshenv
 {{ end }}
 {{ if eq .chezmoi.os "windows" }}
 .oh-my-zsh

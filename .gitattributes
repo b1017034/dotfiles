@@ -1,0 +1,3 @@
+home/dot_zshenv text eol=lf
+home/dot_zshrc text eol=lf
+*.zsh text eol=lf

@@ -1,0 +1,13 @@
+# 非ログイン起動でも MSYS2 の /usr/bin を PATH に通す
+if [[ ":$PATH:" != *":/usr/bin:"* ]]; then
+  export PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
+fi
+
+# FPATH を Windows 形式 (セミコロン区切り) へ変換させない
+export MSYS2_ENV_CONV_EXCL=FPATH
+
+# 変換済みの FPATH を引き継いだ場合は既定の関数パスへ戻す
+if [[ ${FPATH:-} == *\;* ]]; then
+  typeset +x FPATH
+  fpath=(/usr/share/zsh/site-functions /usr/share/zsh/$ZSH_VERSION/functions(N) /usr/share/zsh/functions(N))
+fi

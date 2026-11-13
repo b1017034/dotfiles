@@ -1,0 +1,25 @@
+{{ if eq .chezmoi.os "windows" -}}
+# msys の HOME (/home/<user>) は destDir 外なので、chezmoi 管理の ~/.zshenv を読み込むスタブを置く
+$ErrorActionPreference = 'Stop'
+
+$msysHome = "C:\msys64\home\$env:USERNAME"
+if (-not (Test-Path $msysHome)) {
+    Write-Host "skip: $msysHome not found"
+    return
+}
+
+# C:\Users\x -> /c/Users/x (msys 形式)
+$dest = $env:USERPROFILE -replace '\\', '/'
+$dest = '/' + $dest.Substring(0, 1).ToLower() + $dest.Substring(2)
+$line = "[ -f $dest/.zshenv ] && . $dest/.zshenv"
+$target = Join-Path $msysHome '.zshenv'
+
+if ((Test-Path $target) -and (Select-String -Path $target -SimpleMatch $line -Quiet)) {
+    Write-Host "skip: $target"
+} else {
+    Write-Host "adding stub to: $target"
+    $existing = (Test-Path $target) ? (Get-Content -Raw $target) : ''
+    # msys の zsh が読むので LF・BOM なしで書く
+    [IO.File]::WriteAllText($target, $existing + $line + "`n")
+}
+{{ end -}}

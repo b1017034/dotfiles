@@ -21,12 +21,14 @@ chezmoi が見つかりません。先に導入してください:
 '@
 }
 
-if ((Test-Path $config) -and -not (Select-String -Path $config -SimpleMatch $repo -Quiet)) {
-    Write-Error "既存の設定が別の場所を指しています: $config`n内容を確認してから手で消すか、書き換えてください"
-}
-
 # TOML の文字列内で \ をエスケープする
 $sourceDir = $repo -replace '\\', '\\'
+$destDir = $env:USERPROFILE -replace '\\', '\\'
+
+# 設定ファイル内のパスはエスケープ済みなので、エスケープ後の文字列で照合する
+if ((Test-Path $config) -and -not (Select-String -Path $config -SimpleMatch $sourceDir -Quiet)) {
+    Write-Error "既存の設定が別の場所を指しています: $config`n内容を確認してから手で消すか、書き換えてください"
+}
 
 # chezmoi の source dir は既定で %USERPROFILE%\.local\share\chezmoi だが、このリポジトリは
 # ghq の管理下に置きたいので sourceDir を設定ファイルに書いて上書きする。
@@ -35,6 +37,9 @@ $sourceDir = $repo -replace '\\', '\\'
 New-Item -ItemType Directory -Force -Path $configDir | Out-Null
 @"
 sourceDir = "$sourceDir"
+
+# destDir は既定だと `$HOME 環境変数に解決されるので、msys シェル経由の起動でも揺れないよう固定する
+destDir = "$destDir"
 
 # .ps1 スクリプトには shebang が書けないのでインタプリタを明示する。
 [interpreters.ps1]
